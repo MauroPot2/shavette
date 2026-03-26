@@ -8,6 +8,9 @@ abstract class AppuntamentiRepository {
   
   /// Create (C-R-UD)
   Future<void> salvaAppuntamento(Appuntamento appuntamento);
+
+  /// Update (CR-U-D)
+  Future<void> aggiornaAppuntamento(Appuntamento appuntamento);
   
   /// Delete (CRU-D-)
   Future<void> cancellaAppuntamento(String id);

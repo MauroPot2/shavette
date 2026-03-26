@@ -63,6 +63,9 @@ class FakeAppuntamentiRepository implements AppuntamentiRepository {
   Future<Appuntamento?> getAppuntamentoById(String id) async {
     return null;
   }
+  
+  @override
+  Future<void> aggiornaAppuntamento(Appuntamento appuntamento) async {}
 }
 
 // --- IL COLLAUDO VERO E PROPRIO ---
