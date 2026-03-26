@@ -1,9 +1,7 @@
-import 'package:shavette/features/barbiere/domain/entities/repositories/barbiere_repository.dart';
-import 'package:shavette/features/appuntamenti/domain/entities/appuntamento.dart';
 import 'package:shavette/features/appuntamenti/domain/entities/servizio.dart';
 import 'package:shavette/features/appuntamenti/domain/repositories/appuntamenti_repository.dart';
 import 'package:shavette/features/appuntamenti/domain/services/validatore_appuntamenti.dart';
-
+import 'package:shavette/features/barbiere/domain/entities/repositories/barbiere_repository.dart';
 
 ///questa classe calcola gli slot disponibili adatti ad una nuova prenotazione
 class CalcolaSlotDisponibiliUseCase {
