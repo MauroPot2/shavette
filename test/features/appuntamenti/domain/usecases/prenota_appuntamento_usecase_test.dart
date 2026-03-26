@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shavette/features/appuntamenti/domain/entities/appuntamento.dart';
 import 'package:shavette/features/appuntamenti/domain/entities/servizio.dart';
-import 'package:shavette/features/appuntamenti/domain/usecases/prenota_appuntamento_usecase.dart';
 import 'package:shavette/features/appuntamenti/domain/repositories/appuntamenti_repository.dart';
 import 'package:shavette/features/appuntamenti/domain/services/validatore_appuntamenti.dart';
+import 'package:shavette/features/appuntamenti/domain/usecases/prenota_appuntamento_usecase.dart';
 
 // --- IL NOSTRO CUOCO FINTO (Questa volta tiene traccia di cosa salva) ---
 class FakeAppuntamentiRepository implements AppuntamentiRepository {
@@ -40,7 +40,6 @@ class FakeAppuntamentiRepository implements AppuntamentiRepository {
 
 void main() {
   // Dati condivisi per i test
-  final dataTest = DateTime(2026, 3, 26);
   const servizioTest = Servizio(
     id: 's1',
     nome: 'Taglio',
@@ -51,7 +50,7 @@ void main() {
   final appuntamentoEsistente = Appuntamento(
     id: 'old_1',
     clienteNome: 'Mario Rossi',
-    orarioInizio: DateTime(2026, 3, 26, 10, 0),
+    orarioInizio: DateTime(2026, 3, 26, 10),
     servizioScelto: servizioTest,
   );
 
@@ -71,7 +70,8 @@ void main() {
   test(
     'Deve lanciare SlotOccupatoException se c\'è sovrapposizione (Il Buttafuori funziona)',
     () async {
-      // 1. ARRANGE: Prepariamo il DB finto con un appuntamento già esistente alle 10:00
+      /// 1. ARRANGE: Prepariamo il DB finto con un appuntamento già
+      ///esistente alle 10:00
       final repo = FakeAppuntamentiRepository(
         iniziali: [appuntamentoEsistente],
       );
@@ -81,7 +81,8 @@ void main() {
         validatore: validatore,
       );
 
-      // 2 & 3. ACT & ASSERT: Proviamo a salvare Luigi Verdi alle 10:15 e ci aspettiamo un'eccezione
+      /// 2 & 3. ACT & ASSERT: Proviamo a salvare Luigi Verdi alle
+      /// 10:15 e ci aspettiamo un'eccezione
       expect(
         () => usecase.execute(nuovoAppuntamento),
         throwsA(isA<SlotOccupatoException>()),
