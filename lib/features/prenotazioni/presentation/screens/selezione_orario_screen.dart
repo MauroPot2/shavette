@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 // --- 1. MODELLI DATI (Spostali pure in un file separato in futuro) ---
 class MockSlot {
@@ -319,7 +320,9 @@ class _SelezioneOrarioScreenState extends State<SelezioneOrarioScreen> {
             borderRadius: BorderRadius.circular(16),
           ),
         ),
-        onPressed: () {},
+        onPressed: () async {
+          await context.push('/menu-servizi');
+        },
         child: const Text(
           'Conferma Orario',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
