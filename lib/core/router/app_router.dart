@@ -19,8 +19,12 @@ final appRouter = GoRouter(
     ),
     // 3. Menu Servizi
     GoRoute(
-      path: '/menu-servizi',
-      builder: (context, state) => const MenuServiziScreen(),
+      path: '/menu-servizi/:barbiere/:ora/:minuti',
+      builder: (context, state) => MenuServiziScreen(
+        nomeBarbiere: state.pathParameters['barbiere']!,
+        orarioSelezionato: state.pathParameters['ora']!,
+        minutiDisponibili: int.parse(state.pathParameters['minuti']!),
+      ),
     ),
   ],
 );

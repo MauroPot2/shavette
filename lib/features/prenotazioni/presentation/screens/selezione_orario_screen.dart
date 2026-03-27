@@ -301,6 +301,18 @@ class _SelezioneOrarioScreenState extends State<SelezioneOrarioScreen> {
 
   Widget _buildConfirmSheet(ThemeData theme) {
     if (_selectedSlotKey == null) return const SizedBox.shrink();
+
+    // 1. Estraiamo i dati dalla chiave selezionata ("barbiereId-orario")
+    final parts = _selectedSlotKey!.split('-');
+    final barbiereId = parts[0];
+    final ora = parts[1];
+
+    // 2. Troviamo il nome del barbiere dai nostri dati mockati
+    final barbiere = barbieriDelGiorno.firstWhere((b) => b.id == barbiereId);
+
+    // 3. Fingiamo che ogni slot per ora abbia 45 min liberi (Mock)
+    const minutiLiberi = 45;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
       decoration: BoxDecoration(
@@ -321,7 +333,9 @@ class _SelezioneOrarioScreenState extends State<SelezioneOrarioScreen> {
           ),
         ),
         onPressed: () async {
-          await context.push('/menu-servizi');
+          // 4. ECCO LA MAGIA: Passiamo i parametri dinamici nell'URL di GoRouter!
+          // Sostituisce gli spazi con %20 in automatico per l'URL
+          await context.push('/menu-servizi/${barbiere.nome}/$ora/$minutiLiberi');
         },
         child: const Text(
           'Conferma Orario',

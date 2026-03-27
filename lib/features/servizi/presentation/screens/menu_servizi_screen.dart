@@ -50,14 +50,16 @@ const List<Servizio> listaServizi = [
 ];
 
 class MenuServiziScreen extends StatefulWidget {
+  final String nomeBarbiere;
   final int minutiDisponibili; // Tempo residuo dello slot scelto (es. 40 min)
   final String orarioSelezionato; // Es: "10:00"
 
   const MenuServiziScreen({
     super.key,
+    required this.nomeBarbiere,
     this.minutiDisponibili =
         40, // Mock: lo slot delle 10:00 ha solo 40min liberi
-    this.orarioSelezionato = "10:00",
+    this.orarioSelezionato = '10:00',
   });
 
   @override
@@ -133,7 +135,7 @@ class _MenuServiziScreenState extends State<MenuServiziScreen> {
       margin: const EdgeInsets.all(20),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -142,7 +144,10 @@ class _MenuServiziScreenState extends State<MenuServiziScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Hai selezionato le ${widget.orarioSelezionato}. Hai a disposizione ancora ${widget.minutiDisponibili} minuti.',
+              '''
+              Prenotazione con ${widget.nomeBarbiere} alle ${widget.orarioSelezionato}. 
+              Spazio libero: ${widget.minutiDisponibili} min.
+              ''',
               style: TextStyle(
                 fontSize: 13,
                 color: theme.colorScheme.onPrimaryContainer,
