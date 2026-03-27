@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shavette/core/theme/app_theme.dart';
-import 'package:shavette/features/dashboard/presentation/screens/dashboard_screen.dart';
-import 'package:shavette/features/prenotazioni/presentation/screens/selezione_orario_screen.dart';
-import 'package:shavette/features/servizi/presentation/screens/menu_servizi_screen.dart'; // Aggiungi questo import!
+import 'package:shavette/features/servizi/presentation/screens/menu_servizi_screen.dart'; 
 
 void main() {
-  runApp(const ShavetteApp());
+  runApp(const ProviderScope(
+    child: ShavetteApp()
+    ),);
 }
 
 class ShavetteApp extends StatelessWidget {
