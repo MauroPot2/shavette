@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -28,7 +29,9 @@ class DashboardScreen extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {},
+        onPressed: () async {
+          await context.push('/prenota-orario');
+        },
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
         elevation: 4, // Leggermente più visibile
@@ -41,7 +44,7 @@ class DashboardScreen extends StatelessWidget {
   Widget _buildCustomHeader(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 0),
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -91,7 +94,7 @@ class DashboardScreen extends StatelessWidget {
       height: 75,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         itemCount: 6,
         itemBuilder: (context, index) {
           // Fingiamo che il primo elemento sia "Oggi" ed è quello selezionato
@@ -99,7 +102,7 @@ class DashboardScreen extends StatelessWidget {
 
           return Container(
             width: 60,
-            margin: const EdgeInsets.symmetric(horizontal: 4.0),
+            margin: const EdgeInsets.symmetric(horizontal: 4),
             decoration: BoxDecoration(
               // Se è selezionato si colora del brand, altrimenti è trasparente
               color: isSelected
@@ -152,7 +155,7 @@ class DashboardScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       itemCount: 4,
       itemBuilder: (context, index) {
         // Simuliamo che il primo appuntamento della lista sia quello "In Corso"
@@ -161,7 +164,8 @@ class DashboardScreen extends StatelessWidget {
         return Card(
           elevation: 0,
           margin: const EdgeInsets.only(bottom: 16.0),
-          // Se è in corso, diamo uno sfondo leggermente colorato col colore del brand
+          /// Se è in corso, diamo uno sfondo leggermente colorato
+          /// col colore del brand
           color: isInCorso
               ? theme.colorScheme.primaryContainer.withValues(alpha: 0.5)
               : theme.colorScheme.surfaceContainerHighest.withValues(
