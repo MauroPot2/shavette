@@ -260,12 +260,12 @@ class _MenuServiziScreenState extends State<MenuServiziScreen> {
     );
   }
 
-  void _mostraSuggerimentoSpostamento(BuildContext context, Servizio servizio) {
+  Future<void> _mostraSuggerimentoSpostamento(BuildContext context, Servizio servizio) async {
     final theme = Theme.of(context);
     // Mock: in futuro il "Cervello" ci darà l'orario reale
-    const prossimoSlotDisponibile = "11:30";
+    const prossimoSlotDisponibile = '11:30';
 
-    showModalBottomSheet(
+    await showModalBottomSheet <void>(
       context: context,
       backgroundColor: theme.colorScheme.surface,
       shape: const RoundedRectangleBorder(
@@ -293,7 +293,9 @@ class _MenuServiziScreenState extends State<MenuServiziScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Il servizio "${servizio.nome}" richiede ${servizio.durataMinuti} minuti, ma alle ${widget.orarioSelezionato} abbiamo solo ${widget.minutiDisponibili} minuti liberi.',
+              '''
+Il servizio "${servizio.nome}" richiede ${servizio.durataMinuti} minuti, ma alle ${widget.orarioSelezionato} abbiamo solo ${widget.minutiDisponibili} minuti liberi.
+''',
               textAlign: TextAlign.center,
               style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
             ),

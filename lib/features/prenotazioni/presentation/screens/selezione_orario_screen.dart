@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Riverpod: Import aggiunto
+// Riverpod: Assicurati che il percorso del provider sia corretto
+import 'package:shavette/core/providers/booking_provider.dart'; 
 
-// --- 1. MODELLI DATI (Spostali pure in un file separato in futuro) ---
+// --- 1. MODELLI DATI ---
 class MockSlot {
   final String orario;
   final bool isOccupato;
@@ -24,7 +27,7 @@ class MockBarbiere {
   });
 }
 
-// --- 2. LA LISTA DATI (Quella che mancava) ---
+// --- 2. LA LISTA DATI ---
 final List<MockBarbiere> barbieriDelGiorno = [
   MockBarbiere(
     id: '1',
@@ -59,20 +62,32 @@ final List<MockBarbiere> barbieriDelGiorno = [
 ];
 
 // --- 3. LA SCHERMATA ---
-class SelezioneOrarioScreen extends StatefulWidget {
+// Riverpod: Trasformata in ConsumerStatefulWidget
+class SelezioneOrarioScreen extends ConsumerStatefulWidget {
   const SelezioneOrarioScreen({super.key});
 
   @override
-  State<SelezioneOrarioScreen> createState() => _SelezioneOrarioScreenState();
+  ConsumerState<SelezioneOrarioScreen> createState() => _SelezioneOrarioScreenState();
 }
 
-class _SelezioneOrarioScreenState extends State<SelezioneOrarioScreen> {
+// Riverpod: Trasformata in ConsumerState
+class _SelezioneOrarioScreenState extends ConsumerState<SelezioneOrarioScreen> {
+  // Lasciamo locale solo il giorno, perché serve solo per l'interfaccia visiva
   int _giornoSelezionatoIndex = 0;
-  String? _selectedSlotKey;
+  
+  // Riverpod: ELIMINATO _selectedSlotKey (La memoria locale non serve più)
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    // Riverpod: Ascoltiamo il provider per capire se abbiamo già scelto un orario!
+    final bookingState = ref.watch(bookingProvider);
+    
+    // Ricostruiamo la chiave visiva leggendo dal "Cervello"
+    final selectedSlotKey = (bookingState.barbiereId != null && bookingState.orario != null) 
+        ? "${bookingState.barbiereId}-${bookingState.orario}" 
+        : null;
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -95,13 +110,14 @@ class _SelezioneOrarioScreenState extends State<SelezioneOrarioScreen> {
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
               itemCount: barbieriDelGiorno.length,
               itemBuilder: (context, index) {
-                return _buildBarberRow(theme, barbieriDelGiorno[index]);
+                // Passiamo la chiave globale alla funzione che disegna il barbiere
+                return _buildBarberRow(theme, barbieriDelGiorno[index], selectedSlotKey);
               },
             ),
           ),
         ],
       ),
-      bottomSheet: _buildConfirmSheet(theme),
+      bottomSheet: _buildConfirmSheet(theme, bookingState.barbiereId, bookingState.orario),
     );
   }
 
@@ -177,7 +193,8 @@ class _SelezioneOrarioScreenState extends State<SelezioneOrarioScreen> {
     );
   }
 
-  Widget _buildBarberRow(ThemeData theme, MockBarbiere barbiere) {
+  // Aggiunto selectedSlotKey globale come parametro
+  Widget _buildBarberRow(ThemeData theme, MockBarbiere barbiere, String? selectedSlotKey) {
     return Column(
       children: [
         Padding(
@@ -235,12 +252,13 @@ class _SelezioneOrarioScreenState extends State<SelezioneOrarioScreen> {
               itemBuilder: (context, index) {
                 final slot = barbiere.slots[index];
                 final key = "${barbiere.id}-${slot.orario}";
-                final isSelected = _selectedSlotKey == key;
+                final isSelected = selectedSlotKey == key; // Verifica dallo stato globale
 
                 return GestureDetector(
                   onTap: slot.isOccupato
                       ? null
-                      : () => setState(() => _selectedSlotKey = key),
+                      // Riverpod: QUANDO TAPPIAMO, SCRIVIAMO NEL CERVELLO!
+                      : () => ref.read(bookingProvider.notifier).setOrario(barbiere.id, slot.orario),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     margin: const EdgeInsets.only(right: 12),
@@ -299,18 +317,12 @@ class _SelezioneOrarioScreenState extends State<SelezioneOrarioScreen> {
     );
   }
 
-  Widget _buildConfirmSheet(ThemeData theme) {
-    if (_selectedSlotKey == null) return const SizedBox.shrink();
-
-    // 1. Estraiamo i dati dalla chiave selezionata ("barbiereId-orario")
-    final parts = _selectedSlotKey!.split('-');
-    final barbiereId = parts[0];
-    final ora = parts[1];
-
-    // 2. Troviamo il nome del barbiere dai nostri dati mockati
+  // Riceve i dati direttamente dal provider letto nel metodo build
+  Widget _buildConfirmSheet(ThemeData theme, String? barbiereId, String? orario) {
+    if (barbiereId == null || orario == null) return const SizedBox.shrink();
+    
+    // Troviamo il barbiere per passarlo alla prossima schermata
     final barbiere = barbieriDelGiorno.firstWhere((b) => b.id == barbiereId);
-
-    // 3. Fingiamo che ogni slot per ora abbia 45 min liberi (Mock)
     const minutiLiberi = 45;
 
     return Container(
@@ -332,10 +344,9 @@ class _SelezioneOrarioScreenState extends State<SelezioneOrarioScreen> {
             borderRadius: BorderRadius.circular(16),
           ),
         ),
-        onPressed: () async {
-          // 4. ECCO LA MAGIA: Passiamo i parametri dinamici nell'URL di GoRouter!
-          // Sostituisce gli spazi con %20 in automatico per l'URL
-          await context.push('/menu-servizi/${barbiere.nome}/$ora/$minutiLiberi');
+        onPressed: () {
+          // Riverpod + GoRouter: Usiamo i dati letti dal Provider per navigare
+          context.push('/menu-servizi/${barbiere.nome}/$orario/$minutiLiberi');
         },
         child: const Text(
           'Conferma Orario',
