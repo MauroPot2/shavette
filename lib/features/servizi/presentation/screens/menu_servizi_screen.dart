@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shavette/core/utils/time_utils.dart';
+import 'package:shavette/features/prenotazioni/presentation/screens/selezione_orario_screen.dart';
+import 'package:shavette/core/providers/booking_provider.dart';
 
 // --- MODELLO SERVIZIO ---
 class Servizio {
@@ -49,38 +53,44 @@ const List<Servizio> listaServizi = [
   ),
 ];
 
-class MenuServiziScreen extends StatefulWidget {
+class MenuServiziScreen extends ConsumerStatefulWidget {
   final String nomeBarbiere;
-  final int minutiDisponibili; // Tempo residuo dello slot scelto (es. 40 min)
-  final String orarioSelezionato; // Es: "10:00"
+  final int minutiDisponibili;
+  final String orarioSelezionato;
 
   const MenuServiziScreen({
     super.key,
     required this.nomeBarbiere,
-    this.minutiDisponibili =
-        40, // Mock: lo slot delle 10:00 ha solo 40min liberi
+    this.minutiDisponibili = 40,
     this.orarioSelezionato = '10:00',
   });
 
   @override
-  State<MenuServiziScreen> createState() => _MenuServiziScreenState();
+  ConsumerState<MenuServiziScreen> createState() => _MenuServiziScreenState();
 }
 
-class _MenuServiziScreenState extends State<MenuServiziScreen> {
-  final Set<String> _serviziSelezionatiIds = {};
-
+class _MenuServiziScreenState extends ConsumerState<MenuServiziScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // Leggiamo lo stato globale in tempo reale
+    final bookingState = ref.watch(bookingProvider);
+    final serviziSelezionatiIds = bookingState.serviziIds;
+
+    // Calcolo minuti reali dal Cervello
+    final minutiLiberiReali = _calcolaMinutiLiberiReali(
+      bookingState.barbiereId,
+      bookingState.orario,
+    );
+
     // Calcolo totali dinamici
     final selezionati = listaServizi
-        .where((s) => _serviziSelezionatiIds.contains(s.id))
+        .where((s) => serviziSelezionatiIds.contains(s.id))
         .toList();
-    final totaleTempo = selezionati.fold<int>(
-      0,
-      (sum, item) => sum + item.durataMinuti,
-    );
+
+    final totaleTempo = bookingState.minutiTotali;
+
     final totalePrezzo = selezionati.fold<double>(
       0,
       (sum, item) => sum + item.prezzo,
@@ -100,25 +110,25 @@ class _MenuServiziScreenState extends State<MenuServiziScreen> {
       ),
       body: Column(
         children: [
-          _buildInfoBanner(theme),
+          // PASSIAMO i minuti calcolati al banner
+          _buildInfoBanner(theme, minutiLiberiReali),
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 120),
               itemCount: listaServizi.length,
               itemBuilder: (context, index) {
                 final servizio = listaServizi[index];
-                final isSelected = _serviziSelezionatiIds.contains(servizio.id);
-
-                // Verifica compatibilità temporale
+                final isSelected = serviziSelezionatiIds.contains(servizio.id);
                 final bool fitsInSlot =
-                    (totaleTempo + servizio.durataMinuti) <=
-                    widget.minutiDisponibili;
+                    (totaleTempo + servizio.durataMinuti) <= minutiLiberiReali;
 
+                // PASSIAMO i minuti calcolati alla card
                 return _buildServiceCard(
                   theme,
                   servizio,
                   isSelected,
                   fitsInSlot,
+                  minutiLiberiReali,
                 );
               },
             ),
@@ -129,7 +139,10 @@ class _MenuServiziScreenState extends State<MenuServiziScreen> {
     );
   }
 
-  Widget _buildInfoBanner(ThemeData theme) {
+  // Riceve i minuti in ingresso
+  Widget _buildInfoBanner(ThemeData theme, int minutiLiberiReali) {
+    final bookingState = ref.watch(bookingProvider);
+
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.all(20),
@@ -144,10 +157,7 @@ class _MenuServiziScreenState extends State<MenuServiziScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '''
-              Prenotazione con ${widget.nomeBarbiere} alle ${widget.orarioSelezionato}. 
-              Spazio libero: ${widget.minutiDisponibili} min.
-              ''',
+              'Prenotazione con ${widget.nomeBarbiere} alle ${bookingState.orario ?? widget.orarioSelezionato}.\nSpazio libero: $minutiLiberiReali min.',
               style: TextStyle(
                 fontSize: 13,
                 color: theme.colorScheme.onPrimaryContainer,
@@ -159,20 +169,22 @@ class _MenuServiziScreenState extends State<MenuServiziScreen> {
     );
   }
 
+  // Riceve i minuti in ingresso
   Widget _buildServiceCard(
     ThemeData theme,
     Servizio servizio,
     bool isSelected,
     bool fitsInSlot,
+    int minutiLiberiReali,
   ) {
     return GestureDetector(
       onTap: () {
-        if (isSelected) {
-          setState(() => _serviziSelezionatiIds.remove(servizio.id));
-        } else if (fitsInSlot) {
-          setState(() => _serviziSelezionatiIds.add(servizio.id));
+        if (isSelected || fitsInSlot) {
+          ref
+              .read(bookingProvider.notifier)
+              .toggleServizio(servizio.id, servizio.durataMinuti);
         } else {
-          _mostraSuggerimentoSpostamento(context, servizio);
+          _mostraSuggerimentoSpostamento(context, servizio, minutiLiberiReali);
         }
       },
       child: AnimatedContainer(
@@ -181,7 +193,7 @@ class _MenuServiziScreenState extends State<MenuServiziScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
-              ? theme.colorScheme.primaryContainer.withOpacity(0.4)
+              ? theme.colorScheme.primaryContainer.withValues(alpha: 0.4)
               : theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
@@ -242,12 +254,16 @@ class _MenuServiziScreenState extends State<MenuServiziScreen> {
               Checkbox(
                 value: isSelected,
                 onChanged: (val) {
-                  if (isSelected) {
-                    setState(() => _serviziSelezionatiIds.remove(servizio.id));
-                  } else if (fitsInSlot) {
-                    setState(() => _serviziSelezionatiIds.add(servizio.id));
+                  if (isSelected || fitsInSlot) {
+                    ref
+                        .read(bookingProvider.notifier)
+                        .toggleServizio(servizio.id, servizio.durataMinuti);
                   } else {
-                    _mostraSuggerimentoSpostamento(context, servizio);
+                    _mostraSuggerimentoSpostamento(
+                      context,
+                      servizio,
+                      minutiLiberiReali,
+                    );
                   }
                 },
                 shape: RoundedRectangleBorder(
@@ -260,12 +276,26 @@ class _MenuServiziScreenState extends State<MenuServiziScreen> {
     );
   }
 
-  Future<void> _mostraSuggerimentoSpostamento(BuildContext context, Servizio servizio) async {
+  // Riceve i minuti in ingresso
+  Future<void> _mostraSuggerimentoSpostamento(
+    BuildContext context,
+    Servizio servizio,
+    int minutiLiberiReali,
+  ) async {
     final theme = Theme.of(context);
-    // Mock: in futuro il "Cervello" ci darà l'orario reale
-    const prossimoSlotDisponibile = '11:30';
+    final bookingState = ref.read(bookingProvider);
 
-    await showModalBottomSheet <void>(
+    final barbiere = barbieriDelGiorno.firstWhere(
+      (b) => b.id == bookingState.barbiereId,
+    );
+
+    final prossimoSlotDisponibile = TimeUtils.trovaProssimoSlotDisponibile(
+      slotsDelBarbiere: barbiere.slots,
+      orarioSelezionato: bookingState.orario!,
+      durataServizioMinuti: servizio.durataMinuti,
+    );
+
+    await showModalBottomSheet<void>(
       context: context,
       backgroundColor: theme.colorScheme.surface,
       shape: const RoundedRectangleBorder(
@@ -285,37 +315,63 @@ class _MenuServiziScreenState extends State<MenuServiziScreen> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const Icon(Icons.auto_awesome, color: Colors.amber, size: 48),
+            Icon(
+              prossimoSlotDisponibile != null
+                  ? Icons.auto_awesome
+                  : Icons.error_outline,
+              color: prossimoSlotDisponibile != null
+                  ? Colors.amber
+                  : Colors.redAccent,
+              size: 48,
+            ),
             const SizedBox(height: 16),
-            const Text(
-              'Serve più tempo!',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+            Text(
+              prossimoSlotDisponibile != null
+                  ? 'Serve più tempo!'
+                  : 'Giornata Piena!',
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 12),
+            // Risolta l'interpolazione della stringa
             Text(
-              '''
-Il servizio "${servizio.nome}" richiede ${servizio.durataMinuti} minuti, ma alle ${widget.orarioSelezionato} abbiamo solo ${widget.minutiDisponibili} minuti liberi.
-''',
+              prossimoSlotDisponibile != null
+                  ? '''
+Il servizio "${servizio.nome}" richiede ${servizio.durataMinuti} minuti, ma alle ${bookingState.orario} abbiamo solo $minutiLiberiReali minuti liberi.
+                  '''
+                  : '''
+                  Purtroppo non ci sono buchi abbastanza grandi per "${servizio.nome}" il resto della giornata.
+                  ''',
               textAlign: TextAlign.center,
               style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 24),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 56),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+
+            if (prossimoSlotDisponibile != null)
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                onPressed: () {
+                  ref
+                      .read(bookingProvider.notifier)
+                      .setOrario(
+                        bookingState.barbiereId!,
+                        prossimoSlotDisponibile,
+                      );
+                  ref
+                      .read(bookingProvider.notifier)
+                      .toggleServizio(servizio.id, servizio.durataMinuti);
+                  Navigator.pop(context);
+                },
+                child: Text(
+                  'Sposta alle $prossimoSlotDisponibile',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
-              onPressed: () {
-                // TODO: Logica di spostamento orario
-                Navigator.pop(context);
-              },
-              child: const Text(
-                'Sposta alle $prossimoSlotDisponibile',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
+
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text('Scegli un altro servizio'),
@@ -327,17 +383,18 @@ Il servizio "${servizio.nome}" richiede ${servizio.durataMinuti} minuti, ma alle
   }
 
   Widget _buildSummarySheet(ThemeData theme, double prezzo, int tempo) {
-    if (_serviziSelezionatiIds.isEmpty) return const SizedBox.shrink();
+    final bookingState = ref.watch(bookingProvider);
+    if (bookingState.serviziIds.isEmpty) return const SizedBox.shrink();
 
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: Colors.black12,
             blurRadius: 20,
-            offset: const Offset(0, -5),
+            offset: Offset(0, -5),
           ),
         ],
       ),
@@ -381,5 +438,21 @@ Il servizio "${servizio.nome}" richiede ${servizio.durataMinuti} minuti, ma alle
         ],
       ),
     );
+  }
+
+  int _calcolaMinutiLiberiReali(String? barbiereId, String? orario) {
+    if (barbiereId == null || orario == null) return 0;
+
+    final barbiere = barbieriDelGiorno.firstWhere((b) => b.id == barbiereId);
+    final startIndex = barbiere.slots.indexWhere((s) => s.orario == orario);
+    if (startIndex == -1) return 0;
+
+    int slotLiberiConsecutivi = 0;
+    for (int i = startIndex; i < barbiere.slots.length; i++) {
+      if (barbiere.slots[i].isOccupato) break;
+      slotLiberiConsecutivi++;
+    }
+
+    return slotLiberiConsecutivi * 30;
   }
 }
