@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shavette/core/theme/app_theme.dart';
-import 'package:shavette/features/dashboard/presentation/screens/dashboard_screen.dart'; // Aggiungi questo import!
+import 'package:shavette/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:shavette/features/prenotazioni/presentation/screens/selezione_orario_screen.dart'; // Aggiungi questo import!
 
 void main() {
   runApp(const ShavetteApp());
@@ -17,7 +18,7 @@ class ShavetteApp extends StatelessWidget {
       title: 'Shavette',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.getTheme(brandColor: coloreBrandBarbiere),
-      home: const DashboardScreen(), // ECCO LA MAGIA
+      home: const SelezioneOrarioScreen(), // ECCO LA MAGIA
     );
   }
 }
