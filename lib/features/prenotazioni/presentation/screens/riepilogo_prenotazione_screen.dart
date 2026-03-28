@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shavette/core/providers/booking_provider.dart';
-// Importiamo i mock dagli altri file per ora
-import 'package:shavette/features/prenotazioni/presentation/screens/selezione_orario_screen.dart';
-import 'package:shavette/features/servizi/presentation/screens/menu_servizi_screen.dart';
+import 'package:shavette/features/prenotazioni/data/mock_barbieri.dart';
+import 'package:shavette/features/servizi/data/mock_servizi.dart';
+
 
 class RiepilogoPrenotazioneScreen extends ConsumerWidget {
   const RiepilogoPrenotazioneScreen({super.key});

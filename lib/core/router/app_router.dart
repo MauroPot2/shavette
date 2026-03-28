@@ -24,7 +24,6 @@ final appRouter = GoRouter(
       builder: (context, state) => MenuServiziScreen(
         nomeBarbiere: state.pathParameters['barbiere']!,
         orarioSelezionato: state.pathParameters['ora']!,
-        minutiDisponibili: int.parse(state.pathParameters['minuti']!),
       ),
     ),
     GoRoute(

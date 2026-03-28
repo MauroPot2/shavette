@@ -1,7 +1,7 @@
-import 'package:shavette/features/prenotazioni/presentation/screens/selezione_orario_screen.dart';
+import 'package:shavette/features/prenotazioni/domain/models/barbiere.dart';
 
 class TimeUtils {
-  /// Trova il primo orario disponibile che 
+  /// Trova il primo orario disponibile che
   /// possa contenere l'intera durata del servizio,
   /// cercando a partire dall'orario originariamente selezionato.
   static String? trovaProssimoSlotDisponibile({
@@ -38,7 +38,7 @@ class TimeUtils {
       for (var j = 0; j < blocchiNecessari; j++) {
         if (slotsDelBarbiere[i + j].isOccupato) {
           sequenzaLibera = false;
-          break; // Appena troviamo un muro, 
+          break; // Appena troviamo un muro,
           //smettiamo di controllare questa sequenza
         }
       }
@@ -49,8 +49,28 @@ class TimeUtils {
       }
     }
 
-    ///Se arriviamo qui, il barbiere non ha 
+    ///Se arriviamo qui, il barbiere non ha
     ///più buchi grandi abbastanza per oggi
     return null;
+  }
+
+  /// Calcola quanti minuti consecutivi sono liberi a partire da un certo orario
+  static int calcolaMinutiLiberiReali({
+    required List<MockSlot>
+    slotsDelBarbiere, // Usa dynamic o MockSlot se l'hai importato
+    required String? orario,
+  }) {
+    if (orario == null) return 0;
+
+    final startIndex = slotsDelBarbiere.indexWhere((s) => s.orario == orario);
+    if (startIndex == -1) return 0;
+
+    int slotLiberiConsecutivi = 0;
+    for (int i = startIndex; i < slotsDelBarbiere.length; i++) {
+      if (slotsDelBarbiere[i].isOccupato) break;
+      slotLiberiConsecutivi++;
+    }
+
+    return slotLiberiConsecutivi * 30;
   }
 }
