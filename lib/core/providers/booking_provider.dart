@@ -51,6 +51,17 @@ class BookingNotifier extends StateNotifier<BookingState> {
     }
     state = state.copyWith(serviziIds: nuoviServizi, minutiTotali: nuovoTempo);
   }
+
+  ///reset provider.
+  void reset() {
+    // Riportiamo lo stato alle condizioni di fabbrica (tutto vuoto)
+    state = BookingState(
+      barbiereId: null,
+      orario: null,
+      serviziIds: [],
+      minutiTotali: 0,
+    );
+  }
 }
 
 /// Esponiamo il provider.

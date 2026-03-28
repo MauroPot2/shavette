@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shavette/core/utils/time_utils.dart';
 import 'package:shavette/features/prenotazioni/presentation/screens/selezione_orario_screen.dart';
 import 'package:shavette/core/providers/booking_provider.dart';
@@ -429,7 +430,9 @@ Il servizio "${servizio.nome}" richiede ${servizio.durataMinuti} minuti, ma alle
                 borderRadius: BorderRadius.circular(16),
               ),
             ),
-            onPressed: () {},
+            onPressed: () async {
+              await context.push('/riepilogo');
+            },
             child: const Text(
               'Continua',
               style: TextStyle(fontWeight: FontWeight.bold),

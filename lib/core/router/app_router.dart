@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:shavette/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:shavette/features/prenotazioni/presentation/screens/riepilogo_prenotazione_screen.dart';
 import 'package:shavette/features/prenotazioni/presentation/screens/selezione_orario_screen.dart';
 import 'package:shavette/features/servizi/presentation/screens/menu_servizi_screen.dart';
 
@@ -25,6 +26,10 @@ final appRouter = GoRouter(
         orarioSelezionato: state.pathParameters['ora']!,
         minutiDisponibili: int.parse(state.pathParameters['minuti']!),
       ),
+    ),
+    GoRoute(
+      path: '/riepilogo',
+      builder: (context, state) => const RiepilogoPrenotazioneScreen(),
     ),
   ],
 );
