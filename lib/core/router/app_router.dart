@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:shavette/features/auth/presentation/screens/login_screen.dart';
 import 'package:shavette/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:shavette/features/prenotazioni/presentation/screens/riepilogo_prenotazione_screen.dart';
 import 'package:shavette/features/prenotazioni/presentation/screens/selezione_orario_screen.dart';
@@ -6,8 +7,12 @@ import 'package:shavette/features/servizi/presentation/screens/menu_servizi_scre
 
 ///Il nostro navigatore di schermate utilizza GO Router.
 final appRouter = GoRouter(
-  initialLocation: '/',
+  initialLocation: '/login',
   routes: [
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => const LoginScreen(),
+    ),
     // 1. Dashboard (Home)
     GoRoute(
       path: '/',
