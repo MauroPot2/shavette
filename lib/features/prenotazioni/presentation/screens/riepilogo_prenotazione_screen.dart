@@ -5,7 +5,6 @@ import 'package:shavette/core/providers/booking_provider.dart';
 import 'package:shavette/features/prenotazioni/data/mock_barbieri.dart';
 import 'package:shavette/features/servizi/data/mock_servizi.dart';
 
-
 class RiepilogoPrenotazioneScreen extends ConsumerWidget {
   const RiepilogoPrenotazioneScreen({super.key});
 
@@ -225,7 +224,7 @@ class RiepilogoPrenotazioneScreen extends ConsumerWidget {
               ref.read(bookingProvider.notifier).reset();
 
               // Torna alla Dashboard radendo al suolo lo stack di navigazione
-              context.go('/');
+              context.go('/barber');
             },
             child: const Text(
               'Conferma Prenotazione',
