@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shavette/features/auth/data/auth_repository.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends ConsumerWidget {
   const LoginScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -23,28 +25,25 @@ class LoginScreen extends StatelessWidget {
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Spacer(flex: 2),
 
-                // --- AREA LOGO ---
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.cut_outlined, // Placeholder per il logo del barbiere
+                // --- IL TUO NUOVO LOGO ---
+                Image.asset(
+                  'assets/images/logo_shavette.png',
+                  height: 180,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => Icon(
+                    Icons.cut_outlined,
                     size: 80,
                     color: theme.colorScheme.primary,
                   ),
                 ),
-                const SizedBox(height: 32),
 
-                // --- TESTI ONBOARDING ---
+                const SizedBox(height: 32),
                 Text(
                   'Shavette',
                   style: TextStyle(
@@ -54,22 +53,9 @@ class LoginScreen extends StatelessWidget {
                     letterSpacing: -1,
                   ),
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  '''
-                  Prenota il tuo taglio in pochi secondi.\nScegli il barbiere, fissa l'orario e rilassati.
-                  ''',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: theme.colorScheme.onSurfaceVariant,
-                    height: 1.5,
-                  ),
-                ),
-
                 const Spacer(flex: 2),
 
-                // --- BOTTONE LOGIN (UI MOCK) ---
+                // --- BOTTONE LOGIN REALE ---
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: theme.colorScheme.surface,
@@ -78,26 +64,34 @@ class LoginScreen extends StatelessWidget {
                     elevation: 2,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(
-                        color: theme.colorScheme.outlineVariant.withValues(
-                          alpha: 0.5,
-                        ),
-                      ),
                     ),
                   ),
-                  onPressed: () {
-                    /// Per ora navighiamo direttamente
-                    /// alla Dashboard per testare la UI!
-                    /// Quando avremo Firebase,
-                    /// qui ci sarà la logica di autenticazione vera.
-                    context.go('/prenota-orario');
+                  onPressed: () async {
+                    // Mostriamo un caricamento veloce (opzionale, ma serio)
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Accesso in corso...')),
+                    );
+
+                    try {
+                      final user = await ref
+                          .read(authRepositoryProvider)
+                          .signInWithGoogle();
+
+                      if (user != null && context.mounted) {
+                        // Successo! Il router sentirà il cambiamento e ci sposterà
+                        context.go('/');
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Errore nel login: $e')),
+                        );
+                      }
+                    }
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      /// Placeholder per l'icona di Google
-                      ///  (puoi usare un pacchetto come
-                      ///  font_awesome_flutter per l'icona vera)
                       Icon(
                         Icons.g_mobiledata,
                         size: 32,
@@ -114,20 +108,7 @@ class LoginScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
-
-                // --- TESTO LEGALE MINIMO ---
-                Text(
-                  'Continuando accetti i Termini di Servizio e la Privacy Policy',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: theme.colorScheme.onSurfaceVariant.withValues(
-                      alpha: 0.7,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 48),
               ],
             ),
           ),
