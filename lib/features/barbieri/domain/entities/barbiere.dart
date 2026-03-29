@@ -1,18 +1,13 @@
-class MockSlot {
-  final String orario;
-  final bool isOccupato;
+import 'package:shavette/features/barbieri/domain/entities/slot_orario.dart';
 
-  MockSlot(this.orario, {this.isOccupato = false});
-}
-
-class MockBarbiere {
+class Barbiere {
   final String id;
   final String nome;
   final String avatarUrl;
-  final List<MockSlot> slots;
+  final List<SlotOrario> slots;
   final bool isAlCompleto;
 
-  MockBarbiere({
+  Barbiere({
     required this.id,
     required this.nome,
     required this.avatarUrl,

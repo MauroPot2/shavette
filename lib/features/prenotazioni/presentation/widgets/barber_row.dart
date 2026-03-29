@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shavette/core/providers/booking_provider.dart';
-import '../../domain/models/barbiere.dart';
+import 'package:shavette/features/barbieri/domain/entities/barbiere.dart';
 
 class BarberRow extends ConsumerWidget {
-  final MockBarbiere barbiere;
+  final Barbiere barbiere;
   final String? selectedSlotKey;
 
   const BarberRow({

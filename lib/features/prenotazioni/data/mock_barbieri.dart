@@ -1,34 +1,35 @@
-import 'package:shavette/features/prenotazioni/domain/models/barbiere.dart';
+import 'package:shavette/features/barbieri/domain/entities/barbiere.dart';
+import 'package:shavette/features/barbieri/domain/entities/slot_orario.dart';
 
-final List<MockBarbiere> barbieriDelGiorno = [
-  MockBarbiere(
+final List<Barbiere> barbieriDelGiorno = [
+  Barbiere(
     id: '1',
     nome: 'Barber Gio\'',
     avatarUrl: 'https://i.pravatar.cc/150?u=1',
     slots: [
-      MockSlot('09:00'),
-      MockSlot('09:30', isOccupato: true),
-      MockSlot('10:00'),
-      MockSlot('10:30'),
-      MockSlot('11:00'),
+      const SlotOrario(orario: '09:00'),
+      const SlotOrario(orario: '09:30', isOccupato: true),
+      const SlotOrario(orario: '10:00'),
+      const SlotOrario(orario: '10:30'),
+      const SlotOrario(orario: '11:00'),
     ],
   ),
-  MockBarbiere(
+  Barbiere(
     id: '2',
     nome: 'Barber Beps',
     avatarUrl: 'https://i.pravatar.cc/150?u=2',
     isAlCompleto: true,
     slots: [],
   ),
-  MockBarbiere(
+  Barbiere(
     id: '3',
     nome: 'Barber Marco',
     avatarUrl: 'https://i.pravatar.cc/150?u=3',
     slots: [
-      MockSlot('15:00'),
-      MockSlot('15:30'),
-      MockSlot('16:00'),
-      MockSlot('16:30'),
+      const SlotOrario(orario: '15:00'),
+      const SlotOrario(orario: '15:30'),
+      const SlotOrario(orario: '16:00'),
+      const SlotOrario(orario: '16:30'),
     ],
   ),
 ];

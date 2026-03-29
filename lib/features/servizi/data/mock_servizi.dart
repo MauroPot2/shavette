@@ -1,5 +1,5 @@
 
-import 'package:shavette/features/servizi/domain/models/servizio.dart'; // Importa il modello
+import 'package:shavette/features/servizi/domain/entities/servizio.dart'; // Importa il modello
 
 const List<Servizio> listaServizi = [
   Servizio(

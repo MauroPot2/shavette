@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shavette/core/providers/booking_provider.dart';
 import 'package:shavette/core/utils/time_utils.dart';
-import 'package:shavette/features/prenotazioni/domain/models/barbiere.dart';
-import 'package:shavette/features/servizi/domain/models/servizio.dart';
+import 'package:shavette/features/barbieri/domain/entities/barbiere.dart';
+import 'package:shavette/features/servizi/domain/entities/servizio.dart';
 
 Future<void> mostraSuggerimentoSpostamento({
   required BuildContext context,
   required WidgetRef ref,
   required Servizio servizio,
-  required MockBarbiere barbiere, // dynamic o MockBarbiere
+  required Barbiere barbiere, // dynamic o Barbiere
   required int minutiLiberiReali,
 }) async {
   final theme = Theme.of(context);
