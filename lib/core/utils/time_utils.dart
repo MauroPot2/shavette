@@ -1,11 +1,11 @@
-import 'package:shavette/features/prenotazioni/domain/models/barbiere.dart';
+import 'package:shavette/features/barbieri/domain/entities/slot_orario.dart';
 
 class TimeUtils {
   /// Trova il primo orario disponibile che
   /// possa contenere l'intera durata del servizio,
   /// cercando a partire dall'orario originariamente selezionato.
   static String? trovaProssimoSlotDisponibile({
-    required List<MockSlot> slotsDelBarbiere,
+    required List<SlotOrario> slotsDelBarbiere,
     required String orarioSelezionato,
     required int durataServizioMinuti,
   }) {
@@ -56,7 +56,7 @@ class TimeUtils {
 
   /// Calcola quanti minuti consecutivi sono liberi a partire da un certo orario
   static int calcolaMinutiLiberiReali({
-    required List<MockSlot>
+    required List<SlotOrario>
     slotsDelBarbiere, // Usa dynamic o MockSlot se l'hai importato
     required String? orario,
   }) {
