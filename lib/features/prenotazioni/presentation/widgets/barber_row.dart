@@ -3,15 +3,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shavette/core/providers/booking_provider.dart';
 import 'package:shavette/features/barbieri/domain/entities/barbiere.dart';
 
+///Rappresenta la singola riga di un barbiere
+///nella schermata di selezione.
+///Mostra foto, nome e stato di disponibilità in una lista di
+///[SlotOrario] cliccabile. Se tutto occupato mostra
+///un pulsante per iscriversi alla coda.
 class BarberRow extends ConsumerWidget {
-  final Barbiere barbiere;
-  final String? selectedSlotKey;
-
+  ///Crea una riga per il barbiere
+  ///Utilizzare const per ottimizzare la performance.
   const BarberRow({
-    super.key,
     required this.barbiere,
     this.selectedSlotKey,
+    super.key,
   });
+
+  ///Riprende l'entità Barbiere, sono tutti i dati(nome, foto, slot)
+  final Barbiere barbiere;
+
+  ///La chiave univoca dello slot selezionato.
+  final String? selectedSlotKey;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -26,7 +36,10 @@ class BarberRow extends ConsumerWidget {
               Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: theme.colorScheme.primary.withValues(alpha: .2), width: 2),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: .2),
+                    width: 2,
+                  ),
                 ),
                 child: CircleAvatar(
                   radius: 24,
@@ -38,10 +51,23 @@ class BarberRow extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(barbiere.nome, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                     Text(
-                      barbiere.isAlCompleto ? 'Nessun posto oggi' : 'Posti disponibili',
-                      style: TextStyle(fontSize: 12, color: barbiere.isAlCompleto ? Colors.red : Colors.green),
+                      barbiere.nome,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      barbiere.isAlCompleto
+                          ? 'Nessun posto oggi'
+                          : 'Posti disponibili',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: barbiere.isAlCompleto
+                            ? Colors.red
+                            : Colors.green,
+                      ),
                     ),
                   ],
                 ),
@@ -57,22 +83,30 @@ class BarberRow extends ConsumerWidget {
               itemCount: barbiere.slots.length,
               itemBuilder: (context, index) {
                 final slot = barbiere.slots[index];
-                final key = "${barbiere.id}-${slot.orario}";
+                final key = '${barbiere.id}-${slot.orario}';
                 final isSelected = selectedSlotKey == key;
 
                 return GestureDetector(
                   onTap: slot.isOccupato
                       ? null
-                      : () => ref.read(bookingProvider.notifier).setOrario(barbiere.id, slot.orario),
+                      : () => ref
+                            .read(bookingProvider.notifier)
+                            .setOrario(barbiere.id, slot.orario),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     margin: const EdgeInsets.only(right: 12),
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     decoration: BoxDecoration(
-                      color: isSelected ? theme.colorScheme.primaryContainer : (slot.isOccupato ? Colors.transparent : theme.colorScheme.surface),
+                      color: isSelected
+                          ? theme.colorScheme.primaryContainer
+                          : (slot.isOccupato
+                                ? Colors.transparent
+                                : theme.colorScheme.surface),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outlineVariant,
+                        color: isSelected
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.outlineVariant,
                       ),
                     ),
                     child: Center(
@@ -80,8 +114,14 @@ class BarberRow extends ConsumerWidget {
                         slot.orario,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: isSelected ? theme.colorScheme.primary : (slot.isOccupato ? Colors.grey[400] : theme.colorScheme.onSurface),
-                          decoration: slot.isOccupato ? TextDecoration.lineThrough : null,
+                          color: isSelected
+                              ? theme.colorScheme.primary
+                              : (slot.isOccupato
+                                    ? Colors.grey[400]
+                                    : theme.colorScheme.onSurface),
+                          decoration: slot.isOccupato
+                              ? TextDecoration.lineThrough
+                              : null,
                         ),
                       ),
                     ),
@@ -97,7 +137,11 @@ class BarberRow extends ConsumerWidget {
               onPressed: () {},
               icon: const Icon(Icons.notifications_none, size: 18),
               label: const Text('Avvisami se si libera un posto'),
-              style: OutlinedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
           ),
         const SizedBox(height: 10),
