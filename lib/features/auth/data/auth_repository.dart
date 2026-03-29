@@ -26,8 +26,6 @@ class AuthRepository {
       // 3. USA AUTHENTICATE AL POSTO DI SIGNIN
       final googleUser = await _googleSignIn.authenticate();
 
-      if (googleUser == null) return null;
-
       // 4. RECUPERO DETTAGLI
       final googleAuth = await googleUser.authentication;
 
@@ -35,7 +33,8 @@ class AuthRepository {
       // Se vuoi solo loggare l'utente, l'idToken è sufficiente per Firebase.
       final credential = GoogleAuthProvider.credential(
         idToken: googleAuth.idToken,
-        // Se l'IDE segna ancora rosso su accessToken, omettilo o usa il nuovo client di autorizzazione
+        /// Se l'IDE segna ancora rosso su accessToken,
+        ///  omettilo o usa il nuovo client di autorizzazione
         accessToken: null,
       );
 
