@@ -1,5 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shavette/core/router/app_router.dart';
 import 'package:shavette/features/auth/data/auth_repository.dart';
 
@@ -21,7 +24,7 @@ class RoleSelectionScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Text(
-                'Benvenuto su Shavette!\nScegli come vuoi usare l\'app:',
+                "Benvenuto su Shavette!\nScegli come vuoi usare l'app:",
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
@@ -30,17 +33,27 @@ class RoleSelectionScreen extends ConsumerWidget {
               // BOTTONE BARBIERE (B2B)
               ElevatedButton.icon(
                 icon: const Icon(Icons.store),
-                label: const Text('Gestisco un Salone (Barbiere)'),
+                label: const Text('Gestisco un Salone'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                onPressed: () {
-                  /// 1. Aggiorniamo il provider.
-                  /// Appena questo cambia,
-                  /// GoRouter se ne accorge e lancia la guardia!
-                  ref.read(userRoleProvider.notifier).state = 'barber';
+                onPressed: () async {
+                  final user = FirebaseAuth.instance.currentUser;
 
-                  // (Più avanti, qui aggiungeremo la chiamata per salvare 'barber' su Firestore)
+                  if (user != null) {
+                    try {
+                      await FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(user.uid)
+                          .set({
+                            'role': 'barber',
+                          });
+                      ref.read(userRoleProvider.notifier).state =
+                          'barber_onboarding';
+                    } catch (e) {
+                      print('Errore durante il salvataggio del ruolo: $e');
+                    }
+                  }
                 },
               ),
 
@@ -49,7 +62,7 @@ class RoleSelectionScreen extends ConsumerWidget {
               // BOTTONE CLIENTE (B2C)
               ElevatedButton.icon(
                 icon: const Icon(Icons.person),
-                label: const Text('Cerco un Barbiere (Cliente)'),
+                label: const Text('Cerco un Barbiere'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: Theme.of(
@@ -59,11 +72,26 @@ class RoleSelectionScreen extends ConsumerWidget {
                     context,
                   ).colorScheme.onSecondaryContainer,
                 ),
-                onPressed: () {
-                  // 1. Aggiorniamo il provider con il ruolo cliente.
-                  ref.read(userRoleProvider.notifier).state = 'client';
+                onPressed: () async {
+                  final user = FirebaseAuth.instance.currentUser;
 
-                  // (Più avanti, qui salveremo 'client' su Firestore)
+                  if (user != null) {
+                    try {
+                      await FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(user.uid)
+                          .set({
+                            'role': 'client',
+                          });
+                      ref.read(userRoleProvider.notifier).state = 'client';
+
+                      if (context.mounted) {
+                        context.go('/dash_cliente');
+                      }
+                    } catch (e) {
+                      print('Errore durante il salvataggio del ruolo: $e');
+                    }
+                  }
                 },
               ),
 

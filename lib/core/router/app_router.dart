@@ -5,13 +5,12 @@ import 'package:go_router/go_router.dart';
 import 'package:shavette/features/auth/data/auth_repository.dart';
 import 'package:shavette/features/auth/presentation/screens/login_screen.dart';
 import 'package:shavette/features/auth/presentation/screens/role_selection_screen.dart';
+import 'package:shavette/features/barbieri/presentation/screens/barber_onboarding_screen.dart';
 import 'package:shavette/features/clienti/presentation/screens/client_home_screen.dart';
 import 'package:shavette/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:shavette/features/prenotazioni/presentation/screens/riepilogo_prenotazione_screen.dart';
 import 'package:shavette/features/prenotazioni/presentation/screens/selezione_orario_screen.dart';
 import 'package:shavette/features/servizi/presentation/screens/menu_servizi_screen.dart';
-
-
 
 /// MOCK: Provider temporaneo per il ruolo finché non lo colleghiamo a Firestore
 final userRoleProvider = StateProvider<String?>((ref) => null);
@@ -42,6 +41,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       /// Se sei loggato in base al tuo stato vieni smistato tra le schermate.
       if (isLoggingIn) {
         if (userRole == null) return '/role-selection';
+        if (userRole == 'barber_onboarding') return '/barber-onboarding';
         if (userRole == 'barber') return '/barber';
         if (userRole == 'client') return '/dash_cliente';
       }
@@ -54,7 +54,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/role-selection';
       }
 
-      return null; ///Final check
+      return null;
+
+      ///Final check
     },
 
     ///Rotte.
@@ -75,6 +77,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       ///Rotte B2C.
+      GoRoute(
+        path: '/barber-onboarding',
+        builder: (context, state) => const BarberOnboardingScreen(),
+      ),
       GoRoute(
         path: '/dash_cliente',
         builder: (context, state) => const ClientHomeScreen(),
