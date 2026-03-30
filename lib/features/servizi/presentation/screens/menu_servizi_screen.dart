@@ -16,9 +16,9 @@ import 'package:shavette/features/servizi/presentation/widgets/summary_bottom_ba
 class MenuServiziScreen extends ConsumerWidget {
   ///costruttore della pagina menu servizi
   const MenuServiziScreen({
-    super.key,
     required this.nomeBarbiere,
     this.orarioSelezionato = '10:00',
+    super.key,
   });
 
   /// nome barbiere.

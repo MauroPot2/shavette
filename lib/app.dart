@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shavette/core/router/app_router.dart';
 
 class ShavetteApp extends ConsumerWidget {
-  // <-- Diventa ConsumerWidget
   const ShavetteApp({super.key});
 
   @override
@@ -13,8 +12,8 @@ class ShavetteApp extends ConsumerWidget {
 
     return MaterialApp.router(
       title: 'Shavette',
-      theme: ThemeData(/*... il tuo tema ...*/),
-      routerConfig: router, // <-- Usiamo il router appena letto
+      theme: ThemeData(),
+      routerConfig: router,
     );
   }
 }

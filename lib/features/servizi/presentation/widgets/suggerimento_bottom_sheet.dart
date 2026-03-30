@@ -60,8 +60,12 @@ Future<void> mostraSuggerimentoSpostamento({
           const SizedBox(height: 12),
           Text(
             prossimoSlotDisponibile != null
-                ? 'Il servizio "${servizio.nome}" richiede ${servizio.durataMinuti} minuti, ma alle ${bookingState.orario} abbiamo solo $minutiLiberiReali minuti liberi.'
-                : 'Purtroppo non ci sono buchi abbastanza grandi per "${servizio.nome}" il resto della giornata.',
+                ? '''
+                Il servizio "${servizio.nome}" richiede ${servizio.durataMinuti} minuti, ma alle ${bookingState.orario} abbiamo solo $minutiLiberiReali minuti liberi.
+                '''
+                : '''
+                Purtroppo non ci sono buchi abbastanza grandi per "${servizio.nome}" il resto della giornata.
+                ''',
             textAlign: TextAlign.center,
             style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
           ),

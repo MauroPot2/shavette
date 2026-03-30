@@ -6,10 +6,10 @@ class SummaryBottomBar extends StatelessWidget {
   final VoidCallback onContinue;
 
   const SummaryBottomBar({
-    super.key,
     required this.prezzo,
     required this.tempo,
     required this.onContinue,
+    super.key,
   });
 
   @override

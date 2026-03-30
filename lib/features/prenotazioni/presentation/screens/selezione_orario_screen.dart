@@ -25,7 +25,7 @@ class _SelezioneOrarioScreenState extends ConsumerState<SelezioneOrarioScreen> {
 
     final selectedSlotKey =
         (bookingState.barbiereId != null && bookingState.orario != null)
-        ? "${bookingState.barbiereId}-${bookingState.orario}"
+        ? '${bookingState.barbiereId}-${bookingState.orario}'
         : null;
 
     return Scaffold(

@@ -163,7 +163,7 @@ class DashboardScreen extends StatelessWidget {
 
         return Card(
           elevation: 0,
-          margin: const EdgeInsets.only(bottom: 16.0),
+          margin: const EdgeInsets.only(bottom: 16),
           /// Se è in corso, diamo uno sfondo leggermente colorato
           /// col colore del brand
           color: isInCorso
@@ -180,7 +180,7 @@ class DashboardScreen extends StatelessWidget {
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             child: Row(
               children: [
                 // Colonna Orario
