@@ -4,7 +4,7 @@ import 'package:shavette/features/barbieri/domain/entities/slot_orario.dart';
 final List<Barbiere> barbieriDelGiorno = [
   Barbiere(
     id: '1',
-    nome: 'Barber Gio\'',
+    nome: 'Barber Gio',
     avatarUrl: 'https://i.pravatar.cc/150?u=1',
     slots: [
       const SlotOrario(orario: '09:00'),
@@ -19,7 +19,14 @@ final List<Barbiere> barbieriDelGiorno = [
     nome: 'Barber Beps',
     avatarUrl: 'https://i.pravatar.cc/150?u=2',
     isAlCompleto: true,
-    slots: [],
+    slots: const [
+      SlotOrario(orario: '09:00'),
+      SlotOrario(orario: '09:30'),
+      SlotOrario(orario: '10:00'),
+      SlotOrario(orario: '10:30'),
+      SlotOrario(orario: '11:00'),
+      SlotOrario(orario: '11:30'),
+    ],
   ),
   Barbiere(
     id: '3',

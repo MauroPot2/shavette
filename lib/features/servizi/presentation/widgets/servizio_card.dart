@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../domain/entities/servizio.dart';
+import 'package:shavette/features/servizi/domain/entities/servizio.dart';
 
 class ServizioCard extends StatelessWidget {
   final Servizio servizio;
@@ -8,11 +8,11 @@ class ServizioCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const ServizioCard({
-    super.key,
     required this.servizio,
     required this.isSelected,
     required this.fitsInSlot,
     required this.onTap,
+    super.key,
   });
 
   @override

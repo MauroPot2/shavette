@@ -13,7 +13,8 @@ class RiepilogoPrenotazioneScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final bookingState = ref.watch(bookingProvider);
 
-    /// Misura di sicurezza: se per qualche motivo arriviamo qui senza dati,
+    /// Misura di sicurezza: se per qualche motivo 
+    /// arriviamo qui senza dati,
     ///  mostriamo un errore
     if (bookingState.barbiereId == null ||
         bookingState.orario == null ||
@@ -29,7 +30,7 @@ class RiepilogoPrenotazioneScreen extends ConsumerWidget {
       );
     }
 
-    // 1. Recuperiamo i dati reali incrociando lo stato con i nostri mock
+    /// Recuperiamo i dati reali incrociando lo stato con i nostri mock
     final barbiere = barbieriDelGiorno.firstWhere(
       (b) => b.id == bookingState.barbiereId,
     );
@@ -57,7 +58,6 @@ class RiepilogoPrenotazioneScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- SEZIONE 1: QUANDO E CON CHI ---
             Text(
               'Il tuo appuntamento',
               style: theme.textTheme.titleLarge?.copyWith(
@@ -133,7 +133,6 @@ class RiepilogoPrenotazioneScreen extends ConsumerWidget {
 
             const SizedBox(height: 32),
 
-            // --- SEZIONE 2: I SERVIZI (LO SCONTRINO) ---
             Text(
               'Servizi selezionati',
               style: theme.textTheme.titleLarge?.copyWith(
@@ -196,7 +195,6 @@ class RiepilogoPrenotazioneScreen extends ConsumerWidget {
         ),
       ),
 
-      // --- IL BOTTONE FINALE ---
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -210,8 +208,10 @@ class RiepilogoPrenotazioneScreen extends ConsumerWidget {
               foregroundColor: theme.colorScheme.onPrimary,
             ),
             onPressed: () {
-              // Qui in futuro chiameremo le API per salvare nel Database (FASE 4)
-              // Per ora, puliamo lo stato e torniamo alla Home con un messaggio di successo
+              /// Qui in futuro chiameremo le API per salvare nel 
+              /// Database (FASE 4)
+              /// Per ora, puliamo lo stato e 
+              /// torniamo alla Home con un messaggio di successo
 
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(

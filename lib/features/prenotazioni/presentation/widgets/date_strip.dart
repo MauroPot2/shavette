@@ -31,13 +31,25 @@ class DateStrip extends StatelessWidget {
               width: 60,
               margin: const EdgeInsets.symmetric(horizontal: 6),
               decoration: BoxDecoration(
-                color: isSelected ? theme.colorScheme.primary : theme.colorScheme.surface,
+                color: isSelected
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: isSelected
-                    ? [BoxShadow(color: theme.colorScheme.primary.withValues(alpha: .3), blurRadius: 8, offset: const Offset(0, 4))]
+                    ? [
+                        BoxShadow(
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: .3,
+                          ),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
                     : [],
                 border: Border.all(
-                  color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outlineVariant,
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.outlineVariant,
                 ),
               ),
               child: Column(
@@ -47,7 +59,9 @@ class DateStrip extends StatelessWidget {
                     _getGiornoSettimana(data.weekday),
                     style: TextStyle(
                       fontSize: 12,
-                      color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
+                      color: isSelected
+                          ? theme.colorScheme.onPrimary
+                          : theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -56,7 +70,9 @@ class DateStrip extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+                      color: isSelected
+                          ? theme.colorScheme.onPrimary
+                          : theme.colorScheme.onSurface,
                     ),
                   ),
                 ],

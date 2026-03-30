@@ -6,10 +6,10 @@ class InfoBanner extends StatelessWidget {
   final int minutiLiberi;
 
   const InfoBanner({
-    super.key,
     required this.nomeBarbiere,
     required this.orario,
     required this.minutiLiberi,
+    super.key,
   });
 
   @override
@@ -29,7 +29,9 @@ class InfoBanner extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Prenotazione con $nomeBarbiere alle $orario.\nSpazio libero: $minutiLiberi min.',
+              '''
+              Prenotazione con $nomeBarbiere alle $orario.\nSpazio libero: $minutiLiberi min.
+              ''',
               style: TextStyle(
                 fontSize: 13,
                 color: theme.colorScheme.onPrimaryContainer,
