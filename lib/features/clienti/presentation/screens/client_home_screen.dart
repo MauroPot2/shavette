@@ -10,7 +10,7 @@ class ClientHomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: const Text('Area Cliente (B2C)'),
         actions: [
@@ -45,10 +45,12 @@ class ClientHomeScreen extends ConsumerWidget {
           return Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.1),
+              color: Colors.grey.withValues(alpha: 1),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Center(child: Text('Nessun appuntamento in programma.')),
+            child: const Center(
+              child: Text('Nessun appuntamento in programma.'),
+            ),
           );
         }
 
@@ -56,18 +58,25 @@ class ClientHomeScreen extends ConsumerWidget {
           children: snapshot.data!.docs.map((doc) {
             final data = doc.data() as Map<String, dynamic>;
             final DateTime dataApp = (data['data'] as Timestamp).toDate();
-            
+
             return Card(
               margin: const EdgeInsets.only(bottom: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: ListTile(
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.event, color: Theme.of(context).colorScheme.primary),
+                  child: Icon(
+                    Icons.event,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
                 title: Text(
                   DateFormat('EEEE d MMMM', 'it_IT').format(dataApp),
