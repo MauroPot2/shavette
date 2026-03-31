@@ -1,114 +1,156 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:shavette/features/auth/data/auth_repository.dart';
 
-class LoginScreen extends ConsumerWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+}
 
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  bool _isLogin = true; // Flag per switch tra Login e Registrazione
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+    final repo = ref.read(authRepositoryProvider);
+
+    try {
+      if (_isLogin) {
+        // Usa il tuo nuovo metodo signInWithEmail
+        await repo.signInWithEmail(
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
+        );
+      } else {
+        // Usa il tuo nuovo metodo signUpWithEmail
+        await repo.signUpWithEmail(
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
+        );
+      }
+      // Non serve fare il push della rotta qui, ci pensa il Router
+      // osservando authStateChanges!
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Errore: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              theme.colorScheme.surface,
-              theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Form(
+            key: _formKey,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Spacer(flex: 2),
-
-                // --- IL TUO NUOVO LOGO ---
-                Image.asset(
-                  'assets/images/logo_shavette.png',
-                  height: 180,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => Icon(
-                    Icons.cut_outlined,
-                    size: 80,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-
-                const SizedBox(height: 32),
+                const Icon(Icons.content_cut, size: 80, color: Colors.blue),
+                const SizedBox(height: 24),
                 Text(
-                  'Shavette',
-                  style: TextStyle(
-                    fontSize: 40,
-                    fontWeight: FontWeight.w900,
-                    color: theme.colorScheme.primary,
-                    letterSpacing: -1,
+                  _isLogin ? 'Bentornato su Shavette' : 'Crea il tuo Account',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                const Spacer(flex: 2),
+                const SizedBox(height: 32),
 
-                // --- BOTTONE LOGIN REALE ---
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.surface,
-                    foregroundColor: theme.colorScheme.onSurface,
-                    minimumSize: const Size(double.infinity, 56),
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                // EMAIL
+                TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    prefixIcon: Icon(Icons.email),
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (v) =>
+                      v != null && v.contains('@') ? null : 'Email non valida',
+                ),
+                const SizedBox(height: 16),
+
+                // PASSWORD
+                TextFormField(
+                  controller: _passwordController,
+                  decoration: const InputDecoration(
+                    labelText: 'Password',
+                    prefixIcon: Icon(Icons.lock),
+                    border: OutlineInputBorder(),
+                  ),
+                  obscureText: true,
+                  validator: (v) =>
+                      v != null && v.length >= 6 ? null : 'Minimo 6 caratteri',
+                ),
+                const SizedBox(height: 24),
+
+                if (_isLoading)
+                  const CircularProgressIndicator()
+                else ...[
+                  // BOTTONE ACCEDI / REGISTRATI
+                  ElevatedButton(
+                    onPressed: _submit,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 52),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(_isLogin ? 'Accedi' : 'Registrati'),
+                  ),
+
+                  // SWITCH TRA LOGIN E REGISTRAZIONE
+                  TextButton(
+                    onPressed: () => setState(() => _isLogin = !_isLogin),
+                    child: Text(
+                      _isLogin
+                          ? 'Non hai un account? Registrati ora'
+                          : 'Hai già un account? Torna al login',
                     ),
                   ),
-                  onPressed: () async {
-                    // Mostriamo un caricamento veloce (opzionale, ma serio)
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Accesso in corso...')),
-                    );
 
-                    try {
-                      final user = await ref
-                          .read(authRepositoryProvider)
-                          .signInWithGoogle();
-
-                      if (user != null && context.mounted) {
-                        // Successo! Il router sentirà il cambiamento e ci sposterà
-                        context.go('/');
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Errore nel login: $e')),
-                        );
-                      }
-                    }
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.g_mobiledata,
-                        size: 32,
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        'Accedi con Google',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: Divider(),
                   ),
-                ),
-                const SizedBox(height: 48),
+
+                  // GOOGLE SIGN IN
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.g_mobiledata, size: 32),
+                    label: const Text('Accedi con Google'),
+                    onPressed: () =>
+                        ref.read(authRepositoryProvider).signInWithGoogle(),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 52),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
