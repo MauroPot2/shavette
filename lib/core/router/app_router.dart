@@ -1,5 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart' show StateProvider;
 import 'package:go_router/go_router.dart';
 
 import 'package:shavette/features/auth/data/auth_repository.dart';
@@ -12,33 +12,58 @@ import 'package:shavette/features/prenotazioni/presentation/screens/riepilogo_pr
 import 'package:shavette/features/prenotazioni/presentation/screens/selezione_orario_screen.dart';
 import 'package:shavette/features/servizi/presentation/screens/menu_servizi_screen.dart';
 
-/// MOCK: Provider temporaneo per il ruolo finché non lo colleghiamo a Firestore
-final userRoleProvider = StateProvider<String?>((ref) => null);
+/// NUOVO: Provider intelligente che legge la verità da Firebase!
+final userRoleProvider = FutureProvider<String?>((ref) async {
+  final user = ref.watch(authStateProvider).value;
+  if (user == null) return null;
 
-/// Il nostro navigatore di schermate dinamico gestito da Riverpod
+  // 1. Controlla il ruolo scelto dal documento in 'users'
+  final userDoc = await FirebaseFirestore.instance
+      .collection('users')
+      .doc(user.uid)
+      .get();
+  if (!userDoc.exists) return null;
+
+  final role = userDoc.data()?['role'];
+
+  if (role == 'client') return 'client';
+
+  if (role == 'barber') {
+    // 2. Controllo fondamentale: ha già compilato il form Onboarding?
+    final saloneDoc = await FirebaseFirestore.instance
+        .collection('barbieri')
+        .doc(user.uid)
+        .get();
+
+    // Se il documento del salone esiste, salta l'onboarding. Altrimenti ci deve passare.
+    return saloneDoc.exists ? 'barber' : 'barber_onboarding';
+  }
+
+  return null;
+});
+
+/// Il navigatore dinamico
 final routerProvider = Provider<GoRouter>((ref) {
-  // Ascoltiamo lo stato di Firebase (loggato/non loggato)
   final authState = ref.watch(authStateProvider);
-  // Ascoltiamo il ruolo (barbiere/cliente/null)
-  final userRole = ref.watch(userRoleProvider);
+  final roleState = ref.watch(userRoleProvider); // Ora è un AsyncValue
 
   return GoRouter(
     initialLocation: '/login',
 
-    ///Redirect Logic.
     redirect: (context, state) {
-      /// Continua a non fare niente se autenticazione still loading.
-      if (authState.isLoading) return null;
+      // Se sta ancora contattando Firebase, aspetta
+      if (authState.isLoading || roleState.isLoading) return null;
 
       final isAuth = authState.value != null;
       final isLoggingIn = state.matchedLocation == '/login';
 
-      /// Se non sei loggato vieni reindirizzato alla pagina di login.
       if (!isAuth) {
         return isLoggingIn ? null : '/login';
       }
 
-      /// Se sei loggato in base al tuo stato vieni smistato tra le schermate.
+      final userRole = roleState.value;
+
+      // Smistamento dalla pagina di login in base ai dati di Firebase
       if (isLoggingIn) {
         if (userRole == null) return '/role-selection';
         if (userRole == 'barber_onboarding') return '/barber-onboarding';
@@ -46,8 +71,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         if (userRole == 'client') return '/dash_cliente';
       }
 
-      /// Se sei loggato e non hai un ruolo non puoi fare niente
-      ///  se non scegliere un ruolo.
       if (isAuth &&
           userRole == null &&
           state.matchedLocation != '/role-selection') {
@@ -55,11 +78,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       return null;
-
-      ///Final check
     },
 
-    ///Rotte.
     routes: [
       GoRoute(
         path: '/login',
@@ -68,17 +88,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/role-selection',
         builder: (context, state) => const RoleSelectionScreen(),
-        ///schermata di 
-        ///selezione ruolo
       ),
-
-      /// Rotte B2B.
       GoRoute(
         path: '/barber',
         builder: (context, state) => const DashboardScreen(),
       ),
-
-      ///Rotte B2C.
       GoRoute(
         path: '/barber-onboarding',
         builder: (context, state) => const BarberOnboardingScreen(),
