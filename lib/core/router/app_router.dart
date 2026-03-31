@@ -68,6 +68,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/role-selection',
         builder: (context, state) => const RoleSelectionScreen(),
+        ///schermata di 
+        ///selezione ruolo
       ),
 
       /// Rotte B2B.
