@@ -12,9 +12,10 @@ class BarberOnboardingScreen extends ConsumerStatefulWidget {
       _BarberOnboardingScreenState();
 }
 
-class _BarberOnboardingScreenState extends ConsumerState<BarberOnboardingScreen> {
+class _BarberOnboardingScreenState
+    extends ConsumerState<BarberOnboardingScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // 1. CONTROLLERS ANAGRAFICA
   final _nomeController = TextEditingController();
   final _pivaController = TextEditingController();
@@ -33,8 +34,13 @@ class _BarberOnboardingScreenState extends ConsumerState<BarberOnboardingScreen>
   // 4. BRAND IDENTITY
   Color _selectedColor = Colors.blue;
   final List<Color> _coloriDisponibili = [
-    Colors.blue, Colors.red, Colors.green, 
-    Colors.orange, Colors.purple, Colors.black, Colors.teal
+    Colors.blue,
+    Colors.red,
+    Colors.green,
+    Colors.orange,
+    Colors.purple,
+    Colors.black,
+    Colors.teal,
   ];
 
   bool _isLoading = false;
@@ -57,11 +63,13 @@ class _BarberOnboardingScreenState extends ConsumerState<BarberOnboardingScreen>
 
   Future<void> _salvaSalone() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     // Validazione personalizzata: almeno un barbiere (il titolare)
     if (_collaboratori.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Aggiungi almeno un collaboratore (es. te stesso)')),
+        const SnackBar(
+          content: Text('Aggiungi almeno un collaboratore (es. te stesso)'),
+        ),
       );
       return;
     }
@@ -81,19 +89,22 @@ class _BarberOnboardingScreenState extends ConsumerState<BarberOnboardingScreen>
       };
 
       // Nota: Dovremo aggiornare BarbieriRepository per accettare questi nuovi campi!
-      await ref.read(barbieriRepositoryProvider).creaSalone(
+      await ref
+          .read(barbieriRepositoryProvider)
+          .creaSalone(
             uid: user.uid,
             nomeSalone: _nomeController.text.trim(),
             piva: _pivaController.text.trim(),
             telefono: _telefonoController.text.trim(),
             indirizzo: indirizzoCompleto,
-            coloreBrand: _selectedColor.value.toRadixString(16), // Salviamo il colore come stringa HEX
+            coloreBrand: _selectedColor.value.toRadixString(
+              16,
+            ), // Salviamo il colore come stringa HEX
             staff: _collaboratori,
           );
 
       // Aggiorniamo il router
-      ref.read(userRoleProvider.notifier).state = 'barber';
-      
+      ref.invalidate(userRoleProvider);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -155,7 +166,9 @@ class _BarberOnboardingScreenState extends ConsumerState<BarberOnboardingScreen>
                 Expanded(
                   child: TextFormField(
                     controller: _pivaController,
-                    decoration: const InputDecoration(labelText: 'P.IVA (Opzionale)'),
+                    decoration: const InputDecoration(
+                      labelText: 'P.IVA (Opzionale)',
+                    ),
                   ),
                 ),
               ],
@@ -212,7 +225,9 @@ class _BarberOnboardingScreenState extends ConsumerState<BarberOnboardingScreen>
 
             // --- SEZIONE 3: STAFF ---
             _buildSectionTitle(Icons.people, 'Staff e Collaboratori'),
-            const Text('Aggiungi i barbieri che lavorano nel salone per creare i loro calendari.'),
+            const Text(
+              'Aggiungi i barbieri che lavorano nel salone per creare i loro calendari.',
+            ),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -227,7 +242,11 @@ class _BarberOnboardingScreenState extends ConsumerState<BarberOnboardingScreen>
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.add_circle, size: 32, color: Colors.blue),
+                  icon: const Icon(
+                    Icons.add_circle,
+                    size: 32,
+                    color: Colors.blue,
+                  ),
                   onPressed: _aggiungiCollaboratore,
                 ),
               ],
@@ -257,8 +276,8 @@ class _BarberOnboardingScreenState extends ConsumerState<BarberOnboardingScreen>
                   child: CircleAvatar(
                     backgroundColor: colore,
                     radius: isSelected ? 24 : 18,
-                    child: isSelected 
-                        ? const Icon(Icons.check, color: Colors.white) 
+                    child: isSelected
+                        ? const Icon(Icons.check, color: Colors.white)
                         : null,
                   ),
                 );
@@ -268,7 +287,9 @@ class _BarberOnboardingScreenState extends ConsumerState<BarberOnboardingScreen>
             OutlinedButton.icon(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Prossimamente: Caricamento Logo!')),
+                  const SnackBar(
+                    content: Text('Prossimamente: Caricamento Logo!'),
+                  ),
                 );
               },
               icon: const Icon(Icons.image),
@@ -279,12 +300,17 @@ class _BarberOnboardingScreenState extends ConsumerState<BarberOnboardingScreen>
             // --- TASTO SALVATAGGIO ---
             ElevatedButton(
               onPressed: _isLoading ? null : _salvaSalone,
-              style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.all(16),
+              ),
               child: _isLoading
                   ? const CircularProgressIndicator()
                   : const Text(
                       'Salva e vai alla Dashboard',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
             ),
             const SizedBox(height: 40),

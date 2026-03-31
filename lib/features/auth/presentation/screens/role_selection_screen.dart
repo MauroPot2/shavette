@@ -12,10 +12,7 @@ class RoleSelectionScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Chi sei?'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Chi sei?'), centerTitle: true),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -30,7 +27,7 @@ class RoleSelectionScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 40),
 
-              // BOTTONE BARBIERE (B2B)
+              // BOTTONE BARBIERE
               ElevatedButton.icon(
                 icon: const Icon(Icons.store),
                 label: const Text('Gestisco un Salone'),
@@ -39,27 +36,24 @@ class RoleSelectionScreen extends ConsumerWidget {
                 ),
                 onPressed: () async {
                   final user = FirebaseAuth.instance.currentUser;
-
                   if (user != null) {
                     try {
                       await FirebaseFirestore.instance
                           .collection('users')
                           .doc(user.uid)
-                          .set({
-                            'role': 'barber',
-                          });
-                      ref.read(userRoleProvider.notifier).state =
-                          'barber_onboarding';
+                          .set({'role': 'barber'});
+
+                      // MAGIA QUI: Forziamo il router a rileggere da Firebase!
+                      ref.invalidate(userRoleProvider);
                     } catch (e) {
-                      print('Errore durante il salvataggio del ruolo: $e');
+                      print('Errore: $e');
                     }
                   }
                 },
               ),
-
               const SizedBox(height: 16),
 
-              // BOTTONE CLIENTE (B2C)
+              // BOTTONE CLIENTE
               ElevatedButton.icon(
                 icon: const Icon(Icons.person),
                 label: const Text('Cerco un Barbiere'),
@@ -74,30 +68,22 @@ class RoleSelectionScreen extends ConsumerWidget {
                 ),
                 onPressed: () async {
                   final user = FirebaseAuth.instance.currentUser;
-
                   if (user != null) {
                     try {
                       await FirebaseFirestore.instance
                           .collection('users')
                           .doc(user.uid)
-                          .set({
-                            'role': 'client',
-                          });
-                      ref.read(userRoleProvider.notifier).state = 'client';
+                          .set({'role': 'client'});
 
-                      if (context.mounted) {
-                        context.go('/dash_cliente');
-                      }
+                      // MAGIA QUI: Forziamo il router a rileggere da Firebase!
+                      ref.invalidate(userRoleProvider);
                     } catch (e) {
-                      print('Errore durante il salvataggio del ruolo: $e');
+                      print('Errore: $e');
                     }
                   }
                 },
               ),
-
               const Spacer(),
-
-              // TASTO DI EMERGENZA PER IL LOGOUT DURANTE I TEST
               TextButton.icon(
                 icon: const Icon(Icons.logout, color: Colors.red),
                 label: const Text(
@@ -105,7 +91,6 @@ class RoleSelectionScreen extends ConsumerWidget {
                   style: TextStyle(color: Colors.red),
                 ),
                 onPressed: () async {
-                  // Questo resetta il login Google e ti riporta alla LoginScreen
                   await ref.read(authRepositoryProvider).signOut();
                 },
               ),
