@@ -1,78 +1,90 @@
 import 'package:flutter/material.dart';
 
 class DateStrip extends StatelessWidget {
-  final int selectedIndex;
-  final ValueChanged<int> onDaySelected;
+  final DateTime selectedDate;
+  final ValueChanged<DateTime> onDaySelected;
 
   const DateStrip({
     super.key,
-    required this.selectedIndex,
+    required this.selectedDate,
     required this.onDaySelected,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      height: 100,
-      padding: const EdgeInsets.symmetric(vertical: 16),
+    final oggi = DateTime.now();
+
+    // Generiamo i prossimi 14 giorni, azzerando ore e minuti per sicurezza
+    final dateGenerate = List.generate(14, (index) {
+      final d = oggi.add(Duration(days: index));
+      return DateTime(d.year, d.month, d.day);
+    });
+
+    const giorniSettimana = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+
+    return SizedBox(
+      height: 80,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: 14,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        itemCount: dateGenerate.length,
         itemBuilder: (context, index) {
-          final data = DateTime.now().add(Duration(days: index));
-          final isSelected = selectedIndex == index;
+          final data = dateGenerate[index];
+
+          // Assicuriamoci di comparare solo anno, mese e giorno
+          final dataSelezionataNormalizzata = DateTime(
+            selectedDate.year,
+            selectedDate.month,
+            selectedDate.day,
+          );
+
+          final isSelected = data.isAtSameMomentAs(dataSelezionataNormalizzata);
+          final nomeGiorno = giorniSettimana[data.weekday - 1];
 
           return GestureDetector(
-            onTap: () => onDaySelected(index),
+            onTap: () => onDaySelected(data),
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
+              duration: const Duration(milliseconds: 200),
               width: 60,
-              margin: const EdgeInsets.symmetric(horizontal: 6),
+              margin: const EdgeInsets.symmetric(horizontal: 4),
               decoration: BoxDecoration(
                 color: isSelected
                     ? theme.colorScheme.primary
-                    : theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: .3,
-                          ),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+                border: isSelected
+                    ? null
+                    : Border.all(
+                        color: theme.colorScheme.outlineVariant.withValues(
+                          alpha: 0.5,
                         ),
-                      ]
-                    : [],
-                border: Border.all(
-                  color: isSelected
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.outlineVariant,
-                ),
+                      ),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    _getGiornoSettimana(data.weekday),
+                    nomeGiorno,
                     style: TextStyle(
-                      fontSize: 12,
                       color: isSelected
                           ? theme.colorScheme.onPrimary
                           : theme.colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     data.day.toString(),
                     style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
                       color: isSelected
                           ? theme.colorScheme.onPrimary
                           : theme.colorScheme.onSurface,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
@@ -82,10 +94,5 @@ class DateStrip extends StatelessWidget {
         },
       ),
     );
-  }
-
-  String _getGiornoSettimana(int weekday) {
-    const giorni = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
-    return giorni[weekday - 1];
   }
 }
