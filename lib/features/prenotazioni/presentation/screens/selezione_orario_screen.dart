@@ -2,13 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-
-import 'package:shavette/features/auth/data/auth_repository.dart';
 import 'package:shavette/core/providers/booking_provider.dart';
 import 'package:shavette/core/providers/slot_calculator_provider.dart';
 
-import 'package:shavette/features/barbieri/domain/entities/barbiere.dart'; 
-import 'package:shavette/features/barbieri/domain/entities/slot_orario.dart'; 
+import 'package:shavette/features/auth/data/auth_repository.dart';
+
+import 'package:shavette/features/barbieri/domain/entities/barbiere.dart';
+import 'package:shavette/features/barbieri/domain/entities/slot_orario.dart';
 
 import 'package:shavette/features/prenotazioni/presentation/widgets/barber_row.dart';
 import 'package:shavette/features/prenotazioni/presentation/widgets/confirm_sheet.dart';
@@ -30,18 +30,21 @@ class ClientSelectedDateNotifier extends StateNotifier<DateTime> {
 }
 
 // Usiamo 'final' senza il tipo esplicito chilometrico, così Riverpod non si arrabbia
-final clientSelectedDateProvider = StateNotifierProvider.autoDispose<ClientSelectedDateNotifier, DateTime>((ref) {
-  return ClientSelectedDateNotifier();
-});
+final clientSelectedDateProvider =
+    StateNotifierProvider.autoDispose<ClientSelectedDateNotifier, DateTime>((
+      ref,
+    ) {
+      return ClientSelectedDateNotifier();
+    });
 
 // 2. IL MOTORE DINAMICO
 final staffSaloneProvider = StreamProvider.autoDispose<List<Barbiere>>((ref) {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
-  
+
   // Watch dell'utente loggato
   final AsyncValue<dynamic> authState = ref.watch(authStateProvider);
   final dynamic user = authState.value;
-  
+
   // Watch degli slot calcolati
   final List<SlotOrario> slotDinamici = ref.watch(slotCalculatorProvider);
 
@@ -54,25 +57,27 @@ final staffSaloneProvider = StreamProvider.autoDispose<List<Barbiere>>((ref) {
 
   return firestore
       .collection('barbieri')
-      .doc(uid) 
+      .doc(uid)
       .collection('staff')
       .snapshots()
       .map((QuerySnapshot<Map<String, dynamic>> staffSnapshot) {
-        
-    return staffSnapshot.docs.map((QueryDocumentSnapshot<Map<String, dynamic>> doc) {
-      final Map<String, dynamic> data = doc.data();
-      final String nomeStaff = (data['nome'] as String?) ?? 'Sconosciuto';
-      
-      return Barbiere(
-        id: doc.id,
-        nome: nomeStaff,
-        avatarUrl: (data['avatarUrl'] as String?) ?? 
-            'https://ui-avatars.com/api/?name=${Uri.encodeComponent(nomeStaff)}&background=random',
-        slots: slotDinamici, 
-        isAlCompleto: (data['isAlCompleto'] as bool?) ?? false,
-      );
-    }).toList();
-  });
+        return staffSnapshot.docs.map((
+          QueryDocumentSnapshot<Map<String, dynamic>> doc,
+        ) {
+          final Map<String, dynamic> data = doc.data();
+          final String nomeStaff = (data['nome'] as String?) ?? 'Sconosciuto';
+
+          return Barbiere(
+            id: doc.id,
+            nome: nomeStaff,
+            avatarUrl:
+                (data['avatarUrl'] as String?) ??
+                'https://ui-avatars.com/api/?name=${Uri.encodeComponent(nomeStaff)}&background=random',
+            slots: slotDinamici,
+            isAlCompleto: (data['isAlCompleto'] as bool?) ?? false,
+          );
+        }).toList();
+      });
 });
 
 // 3. LA SCHERMATA
@@ -86,7 +91,9 @@ class SelezioneOrarioScreen extends ConsumerWidget {
     // Watch degli stati
     final BookingState bookingState = ref.watch(bookingProvider);
     final DateTime dataSelezionata = ref.watch(clientSelectedDateProvider);
-    final AsyncValue<List<Barbiere>> staffAsyncValue = ref.watch(staffSaloneProvider); 
+    final AsyncValue<List<Barbiere>> staffAsyncValue = ref.watch(
+      staffSaloneProvider,
+    );
 
     final String? selectedSlotKey =
         (bookingState.barbiereId != null && bookingState.orario != null)
@@ -118,7 +125,10 @@ class SelezioneOrarioScreen extends ConsumerWidget {
             child: staffAsyncValue.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (Object error, StackTrace stack) => Center(
-                child: Text('Errore: $error', style: const TextStyle(color: Colors.red)),
+                child: Text(
+                  'Errore: $error',
+                  style: const TextStyle(color: Colors.red),
+                ),
               ),
               data: (List<Barbiere> staffList) {
                 if (staffList.isEmpty) {
