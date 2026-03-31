@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+// Import delle tue classi
 import 'package:shavette/features/auth/data/auth_repository.dart';
 import 'package:shavette/features/auth/presentation/screens/login_screen.dart';
 import 'package:shavette/features/auth/presentation/screens/role_selection_screen.dart';
@@ -12,75 +13,98 @@ import 'package:shavette/features/prenotazioni/presentation/screens/riepilogo_pr
 import 'package:shavette/features/prenotazioni/presentation/screens/selezione_orario_screen.dart';
 import 'package:shavette/features/servizi/presentation/screens/menu_servizi_screen.dart';
 
-/// NUOVO: Provider intelligente che legge la verità da Firebase!
+/// PROVIDER RUOLO: Legge la "Verità" da Firestore in tempo reale
 final userRoleProvider = FutureProvider<String?>((ref) async {
   final user = ref.watch(authStateProvider).value;
   if (user == null) return null;
 
-  // 1. Controlla il ruolo scelto dal documento in 'users'
+  // 1. Controlla il ruolo nel documento dell'utente
   final userDoc = await FirebaseFirestore.instance
       .collection('users')
       .doc(user.uid)
       .get();
+
   if (!userDoc.exists) return null;
 
   final role = userDoc.data()?['role'];
 
+  // 2. Se è un cliente, restituiamo subito 'client'
   if (role == 'client') return 'client';
 
+  // 3. Se è un barbiere, verifichiamo se ha completato l'onboarding (salone creato)
   if (role == 'barber') {
-    // 2. Controllo fondamentale: ha già compilato il form Onboarding?
     final saloneDoc = await FirebaseFirestore.instance
         .collection('barbieri')
         .doc(user.uid)
         .get();
 
-    // Se il documento del salone esiste, salta l'onboarding. Altrimenti ci deve passare.
     return saloneDoc.exists ? 'barber' : 'barber_onboarding';
   }
 
   return null;
 });
 
-/// Il navigatore dinamico
+/// ROUTER PROVIDER: Il Vigile Urbano dell'app
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
-  final roleState = ref.watch(userRoleProvider); // Ora è un AsyncValue
+  final roleState = ref.watch(userRoleProvider);
 
   return GoRouter(
     initialLocation: '/login',
 
     redirect: (context, state) {
-      // Se sta ancora contattando Firebase, aspetta
+      // Aspetta che i dati di Firebase siano caricati
       if (authState.isLoading || roleState.isLoading) return null;
 
-      final isAuth = authState.value != null;
-      final isLoggingIn = state.matchedLocation == '/login';
+      final user = authState.value;
+      final role = roleState.value;
+      final String location = state.matchedLocation;
 
-      if (!isAuth) {
-        return isLoggingIn ? null : '/login';
+      // --- LOGICA DI REINDIRIZZAMENTO ---
+
+      // 1. UTENTE NON LOGGATO: Forza sempre il login
+      if (user == null) {
+        return location == '/login' ? null : '/login';
       }
 
-      final userRole = roleState.value;
-
-      // Smistamento dalla pagina di login in base ai dati di Firebase
-      if (isLoggingIn) {
-        if (userRole == null) return '/role-selection';
-        if (userRole == 'barber_onboarding') return '/barber-onboarding';
-        if (userRole == 'barber') return '/barber';
-        if (userRole == 'client') return '/dash_cliente';
+      // 2. LOGGATO MA SENZA RUOLO: Forza scelta ruolo
+      if (role == null) {
+        return location == '/role-selection' ? null : '/role-selection';
       }
 
-      if (isAuth &&
-          userRole == null &&
-          state.matchedLocation != '/role-selection') {
-        return '/role-selection';
+      // 3. LOGGATO CON RUOLO: Smistamento basato sulla destinazione
+      final bool isAtAuthScreen =
+          location == '/login' || location == '/role-selection';
+
+      // CASO: CLIENTE
+      if (role == 'client') {
+        // Se è in una pagina di auth o prova a entrare nell'area barbiere -> Rimbalza in Dash Cliente
+        if (isAtAuthScreen || location.startsWith('/barber')) {
+          return '/dash_cliente';
+        }
       }
 
+      // CASO: BARBIERE IN ATTESA DI ONBOARDING
+      if (role == 'barber_onboarding') {
+        if (location != '/barber-onboarding') {
+          return '/barber-onboarding';
+        }
+      }
+
+      // CASO: BARBIERE ATTIVO (Onboarding completato)
+      if (role == 'barber') {
+        // Se è in una pagina di auth o nella dash del cliente -> Rimbalza in Dash Barbiere
+        if (isAtAuthScreen || location == '/dash_cliente') {
+          return '/barber';
+        }
+      }
+
+      // Se è già sulla rotta corretta, non fare nulla
       return null;
     },
 
     routes: [
+      // AREA AUTENTICAZIONE
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginScreen(),
@@ -89,6 +113,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/role-selection',
         builder: (context, state) => const RoleSelectionScreen(),
       ),
+
+      // AREA BARBIERE (B2B)
       GoRoute(
         path: '/barber',
         builder: (context, state) => const DashboardScreen(),
@@ -97,6 +123,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/barber-onboarding',
         builder: (context, state) => const BarberOnboardingScreen(),
       ),
+
+      // AREA CLIENTE (B2C)
       GoRoute(
         path: '/dash_cliente',
         builder: (context, state) => const ClientHomeScreen(),
