@@ -1,7 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:shavette/core/providers/booking_provider.dart';
 import 'package:shavette/features/auth/data/auth_repository.dart';
 
 class ClientHomeScreen extends ConsumerWidget {
@@ -9,114 +9,77 @@ class ClientHomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-
-    // 1. Ascoltiamo la lista dei saloni da Firebase
-    final saloniAsync = ref.watch(listaSaloniProvider);
-
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        title: const Text(
-          'Shavette',
-          style: TextStyle(fontWeight: FontWeight.w900),
-        ),
-        centerTitle: true,
+        title: const Text('Area Cliente (B2C)'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout_rounded),
             onPressed: () => ref.read(authRepositoryProvider).signOut(),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Scegli il tuo salone',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text('Trova il barbiere perfetto per il tuo prossimo taglio'),
-            const SizedBox(height: 24),
-
-            // 2. GESTIONE DELLO STATO ASINCRONO (Firebase)
-            saloniAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => Center(child: Text('Errore: $err')),
-              data: (listaSaloni) {
-                if (listaSaloni.isEmpty) {
-                  return const Center(
-                    child: Text('Nessun salone disponibile al momento.'),
-                  );
-                }
-
-                return ListView.builder(
-                  shrinkWrap:
-                      true, // Importante dentro una SingleChildScrollView
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: listaSaloni.length,
-                  itemBuilder: (context, index) {
-                    final salone = listaSaloni[index];
-                    final String nome =
-                        (salone['nome'] as String?) ?? 'Salone senza nome';
-                    final String id = salone['id'] as String;
-
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        side: BorderSide(
-                          color: theme.colorScheme.outlineVariant,
-                        ),
-                      ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(16),
-                        leading: CircleAvatar(
-                          radius: 30,
-                          backgroundColor: theme.colorScheme.primaryContainer,
-                          child: Icon(
-                            Icons.store,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                        title: Text(
-                          nome,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                        subtitle: const Text('Taglio, Barba, Trattamenti'),
-                        trailing: Icon(
-                          Icons.chevron_right,
-                          color: theme.colorScheme.primary,
-                        ),
-                        onTap: () async {
-                          final String idSalone = salone['id'] as String;
-                          // 3. UNIAMO I PUNTINI: Settiamo il salone e andiamo avanti
-                          ref.read(selectedSaloneProvider.notifier).state =
-                              idSalone;
-                          ref
-                              .read(bookingProvider.notifier)
-                              .setSalone(idSalone);
-
-                          await context.push('/prenota-orario');
-                        },
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ],
-        ),
+      body: const Center(
+        child: Text('Mappa saloni e prenotazioni andranno qui.'),
       ),
+    );
+  }
+
+  // Widget che legge le prenotazioni da Firestore
+  Widget _buildAppointmentsList(String? userId) {
+    if (userId == null) return const SizedBox();
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('prenotazioni')
+          .where('clienteId', isEqualTo: userId)
+          .orderBy('data', descending: false)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.grey.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Center(child: Text('Nessun appuntamento in programma.')),
+          );
+        }
+
+        return Column(
+          children: snapshot.data!.docs.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            final DateTime dataApp = (data['data'] as Timestamp).toDate();
+            
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.event, color: Theme.of(context).colorScheme.primary),
+                ),
+                title: Text(
+                  DateFormat('EEEE d MMMM', 'it_IT').format(dataApp),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text('Ore ${data['orario']} - ${data['stato']}'),
+                trailing: const Icon(Icons.chevron_right),
+              ),
+            );
+          }).toList(),
+        );
+      },
     );
   }
 }

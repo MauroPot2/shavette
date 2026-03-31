@@ -58,4 +58,39 @@ class BarbieriRepository {
       rethrow; // Rilancia l'errore per farlo catturare alla UI (che mostrerà lo SnackBar)
     }
   }
+
+  /// Salva una nuova prenotazione su Firestore
+  Future<void> salvaPrenotazione({
+    required String clienteId,
+    required String barbiereId, // ID dello staffer specifico
+    required String saloneId, // ID del titolare/salone
+    required String orario,
+    required DateTime data,
+    required List<String> serviziIds,
+    required int durataTotale,
+    required double prezzoTotale,
+  }) async {
+    try {
+      // Creiamo un riferimento a una nuova collezione globale 'prenotazioni'
+      final prenotazioneRef = _firestore.collection('prenotazioni').doc();
+
+      await prenotazioneRef.set({
+        'id': prenotazioneRef.id,
+        'clienteId': clienteId,
+        'barbiereId': barbiereId,
+        'saloneId': saloneId,
+        'orario': orario,
+        // Salviamo la data come Timestamp di Firebase per facilitare le query
+        'data': Timestamp.fromDate(data),
+        'serviziIds': serviziIds,
+        'durataTotale': durataTotale,
+        'prezzoTotale': prezzoTotale,
+        'stato': 'confermata',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print("Errore nel salvataggio della prenotazione: $e");
+      rethrow;
+    }
+  }
 }

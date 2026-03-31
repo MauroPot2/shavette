@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import 'package:shavette/core/providers/booking_provider.dart';
-import 'package:shavette/features/auth/data/auth_repository.dart'; // Per sapere chi è l'utente
-import 'package:shavette/features/prenotazioni/presentation/screens/selezione_orario_screen.dart'; // Per lo staffSaloneProvider
+import 'package:shavette/features/auth/data/auth_repository.dart';
+import 'package:shavette/features/barbieri/data/barbieri_repository.dart';
+import 'package:shavette/features/prenotazioni/presentation/screens/selezione_orario_screen.dart';
 import 'package:shavette/features/servizi/data/mock_servizi.dart';
 import 'package:shavette/features/barbieri/domain/entities/barbiere.dart';
 
@@ -16,11 +18,11 @@ class RiepilogoPrenotazioneScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final bookingState = ref.watch(bookingProvider);
 
-    // 1. RECUPERIAMO I DATI REALI DA FIREBASE
+    // Recuperiamo i dati necessari dai provider
     final staffAsync = ref.watch(staffSaloneProvider);
-    final authState = ref.watch(authStateProvider);
+    final dataSelezionata = ref.watch(clientSelectedDateProvider);
 
-    // 2. MISURA DI SICUREZZA: Se mancano dati essenziali nello stato
+    // 1. MISURA DI SICUREZZA: Controllo dati mancanti
     if (bookingState.barbiereId == null ||
         bookingState.orario == null ||
         bookingState.serviziIds.isEmpty) {
@@ -28,7 +30,7 @@ class RiepilogoPrenotazioneScreen extends ConsumerWidget {
         appBar: AppBar(title: const Text('Errore')),
         body: Center(
           child: ElevatedButton(
-            onPressed: () => context.go('/'),
+            onPressed: () => context.go('/dash_cliente'),
             child: const Text('Dati mancanti. Torna alla Home'),
           ),
         ),
@@ -36,12 +38,14 @@ class RiepilogoPrenotazioneScreen extends ConsumerWidget {
     }
 
     return staffAsync.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (err, stack) =>
-          Scaffold(body: Center(child: Text('Errore: $err'))),
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (err, stack) => Scaffold(
+        body: Center(child: Text('Errore nel caricamento staff: $err')),
+      ),
       data: (listaBarbieri) {
-        // 3. TROVIAMO IL BARBIERE REALE
+        // 2. RECUPERO BARBIERE E CALCOLO PREZZO
         final Barbiere barbiere = listaBarbieri.firstWhere(
           (b) => b.id == bookingState.barbiereId,
           orElse: () => listaBarbieri.first,
@@ -79,6 +83,8 @@ class RiepilogoPrenotazioneScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
+
+                // CARD INFO BARBIERE E DATA
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -115,15 +121,28 @@ class RiepilogoPrenotazioneScreen extends ConsumerWidget {
                                   color: theme.colorScheme.primary,
                                 ),
                                 const SizedBox(width: 6),
-                                const Text('Oggi'),
-                                const SizedBox(width: 12),
+                                Text(
+                                  DateFormat(
+                                    'EEEE d MMMM',
+                                    'it_IT',
+                                  ).format(dataSelezionata),
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
                                 Icon(
                                   Icons.access_time,
                                   size: 14,
                                   color: theme.colorScheme.primary,
                                 ),
                                 const SizedBox(width: 6),
-                                Text(bookingState.orario!),
+                                Text(
+                                  'Ore ${bookingState.orario!}',
+                                  style: const TextStyle(fontSize: 13),
+                                ),
                               ],
                             ),
                           ],
@@ -132,7 +151,9 @@ class RiepilogoPrenotazioneScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
+
                 const SizedBox(height: 32),
+
                 Text(
                   'Servizi selezionati',
                   style: theme.textTheme.titleLarge?.copyWith(
@@ -140,6 +161,8 @@ class RiepilogoPrenotazioneScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
+
+                // CARD LISTA SERVIZI E TOTALE
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -197,6 +220,8 @@ class RiepilogoPrenotazioneScreen extends ConsumerWidget {
               ],
             ),
           ),
+
+          // BOTTONE DI CONFERMA FINALE
           bottomNavigationBar: SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -209,21 +234,54 @@ class RiepilogoPrenotazioneScreen extends ConsumerWidget {
                   backgroundColor: theme.colorScheme.primary,
                   foregroundColor: theme.colorScheme.onPrimary,
                 ),
-                onPressed: () {
-                  // TODO: FASE 4 - Salvare la prenotazione su Firestore
+                onPressed: () async {
+                  final user = ref.read(authStateProvider).value;
+                  final repository = ref.read(barbieriRepositoryProvider);
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Prenotazione confermata con successo! 🎉'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
+                  if (user == null) return;
 
-                  ref.read(bookingProvider.notifier).reset();
+                  try {
+                    // Mostriamo caricamento
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (context) =>
+                          const Center(child: CircularProgressIndicator()),
+                    );
 
-                  // Ritorno dinamico: se sono barbiere vado in dashboard, se cliente alla home cliente
-                  // (Per ora usiamo il fallback '/dash_cliente' se non siamo sicuri)
-                  context.go('/dash_cliente');
+                    // Salvataggio su Firestore
+                    await repository.salvaPrenotazione(
+                      clienteId: user.uid,
+                      barbiereId: bookingState.barbiereId!,
+                      saloneId: user.uid, // In test usiamo l'UID corrente
+                      orario: bookingState.orario!,
+                      data: dataSelezionata,
+                      serviziIds: bookingState.serviziIds,
+                      durataTotale: bookingState.minutiTotali,
+                      prezzoTotale: totalePrezzo,
+                    );
+
+                    if (context.mounted) Navigator.of(context).pop();
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Prenotazione confermata! A presto! 🎉'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+
+                    // Reset stato e ritorno in Home
+                    ref.read(bookingProvider.notifier).reset();
+                    context.go('/dash_cliente');
+                  } catch (e) {
+                    if (context.mounted) Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Errore: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
                 },
                 child: const Text(
                   'Conferma Prenotazione',
