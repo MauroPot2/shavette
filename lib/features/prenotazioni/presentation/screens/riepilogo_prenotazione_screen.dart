@@ -6,9 +6,9 @@ import 'package:intl/intl.dart';
 import 'package:shavette/core/providers/booking_provider.dart';
 import 'package:shavette/features/auth/data/auth_repository.dart';
 import 'package:shavette/features/barbieri/data/barbieri_repository.dart';
+import 'package:shavette/features/barbieri/domain/entities/barbiere.dart';
 import 'package:shavette/features/prenotazioni/presentation/screens/selezione_orario_screen.dart';
 import 'package:shavette/features/servizi/data/mock_servizi.dart';
-import 'package:shavette/features/barbieri/domain/entities/barbiere.dart';
 
 class RiepilogoPrenotazioneScreen extends ConsumerWidget {
   const RiepilogoPrenotazioneScreen({super.key});
